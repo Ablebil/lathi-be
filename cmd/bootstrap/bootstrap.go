@@ -1,0 +1,62 @@
+package bootstrap
+
+import (
+	"flag"
+	"fmt"
+	"log/slog"
+	"os"
+
+	"github.com/Ablebil/lathi-be/db/migration"
+	"github.com/Ablebil/lathi-be/internal/config"
+	"github.com/Ablebil/lathi-be/internal/infra/fiber"
+	"github.com/Ablebil/lathi-be/internal/infra/postgresql"
+
+	userHandler "github.com/Ablebil/lathi-be/internal/app/user/handler"
+	userRepository "github.com/Ablebil/lathi-be/internal/app/user/repository"
+	userUsecase "github.com/Ablebil/lathi-be/internal/app/user/usecase"
+)
+
+func Start() error {
+	env, err := config.New()
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := postgresql.New(env)
+	if err != nil {
+		panic(err)
+	}
+
+	handleArgs(env)
+
+	app := fiber.New(env)
+	v1 := app.Group("/api/v1")
+
+	userRepository := userRepository.NewUserRepository(db)
+	userUsecase := userUsecase.NewUserUsecase(userRepository)
+	userHandler.NewUserHandler(v1, userUsecase)
+
+	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
+}
+
+func handleArgs(env *config.Env) {
+	migrateCmd := flag.NewFlagSet("migrate", flag.ExitOnError)
+
+	migrateAction := migrateCmd.String("action", "", "specify 'up' or 'down' for migration")
+
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "migrate":
+			if err := migrateCmd.Parse(os.Args[2:]); err != nil {
+				slog.Error("unable to parse migrate command", "error", err)
+			}
+
+			if *migrateAction == "" {
+				slog.Error("migration action is required")
+			}
+
+			migration.Migrate(env, *migrateAction)
+			os.Exit(1)
+		}
+	}
+}

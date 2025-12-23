@@ -1,0 +1,23 @@
+# Go build
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Output & temp
+bin/
+build/
+tmp/
+*.log
+build-errors.log
+
+# Env
+.env
+
+# Editor
+.vscode/
+.idea/
