@@ -6,9 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Success(ctx *fiber.Ctx, status int, data any) error {
+func Success(ctx *fiber.Ctx, status int, message string, data any) error {
 	return ctx.Status(status).JSON(fiber.Map{
 		"success": true,
+		"message": message,
 		"data":    data,
 	})
 }

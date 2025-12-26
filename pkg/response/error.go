@@ -47,3 +47,6 @@ func ErrUnauthorized(detail string) *APIError {
 func ErrBadRequest(detail string) *APIError {
 	return NewAPIError(400, "bad_request", "Bad request", detail)
 }
+func ErrConflict(detail string) *APIError {
+	return NewAPIError(409, "conflict", "Conflict", detail)
+}
