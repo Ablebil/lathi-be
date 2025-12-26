@@ -10,10 +10,16 @@ import (
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
 	"github.com/Ablebil/lathi-be/internal/infra/postgresql"
+	"github.com/Ablebil/lathi-be/internal/infra/redis"
+	"github.com/Ablebil/lathi-be/pkg/bcrypt"
+	"github.com/Ablebil/lathi-be/pkg/jwt"
+	"github.com/Ablebil/lathi-be/pkg/mail"
+	"github.com/Ablebil/lathi-be/pkg/validator"
 
-	userHandler "github.com/Ablebil/lathi-be/internal/app/user/handler"
-	userRepository "github.com/Ablebil/lathi-be/internal/app/user/repository"
-	userUsecase "github.com/Ablebil/lathi-be/internal/app/user/usecase"
+	authHdl "github.com/Ablebil/lathi-be/internal/app/auth/handler"
+	authUc "github.com/Ablebil/lathi-be/internal/app/auth/usecase"
+
+	userRepo "github.com/Ablebil/lathi-be/internal/app/user/repository"
 )
 
 func Start() error {
@@ -32,9 +38,16 @@ func Start() error {
 	app := fiber.New(env)
 	v1 := app.Group("/api/v1")
 
-	userRepository := userRepository.NewUserRepository(db)
-	userUsecase := userUsecase.NewUserUsecase(userRepository)
-	userHandler.NewUserHandler(v1, userUsecase)
+	cache := redis.New(env)
+	val := validator.NewValidator()
+	bcrypt := bcrypt.NewBcrypt()
+	mail := mail.NewMail(env)
+	jwt := jwt.NewJwt(env)
+
+	// auth module
+	userRepository := userRepo.NewUserRepository(db)
+	authUsecase := authUc.NewAuthUsecase(userRepository, bcrypt, mail, cache, jwt, env)
+	authHdl.NewAuthHandler(v1, val, authUsecase)
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
 }
