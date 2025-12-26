@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Verifikasi Email</title>
+    <style>
+      body,
+      p,
+      h1,
+      h2 {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #3f2305;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 24px auto;
+        background: #ffffff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      .header {
+        background: #3f2305;
+        color: #ffffff;
+        text-align: center;
+        padding: 18px;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+      }
+
+      .content {
+        padding: 20px;
+        text-align: left;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 12px 20px;
+        background: #3f2305;
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 6px;
+        margin: 18px 0;
+      }
+
+      .muted {
+        color: #6b6b6b;
+        font-size: 13px;
+      }
+
+      .footer {
+        font-size: 12px;
+        color: #6b6b6b;
+        text-align: center;
+        padding: 14px 10px;
+        border-top: 1px solid #e5e5e5;
+        margin-top: 16px;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          margin: 12px;
+          padding: 16px;
+        }
+
+        .button {
+          width: 100%;
+          box-sizing: border-box;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container" role="article" aria-label="Email verifikasi">
+      <div class="header">
+        <h1>Lathi</h1>
+      </div>
+
+      <div class="content">
+        <p>Halo <strong>{{.Username}}</strong>,</p>
+
+        <p class="muted" style="margin-top: 8px">
+          Terima kasih telah mendaftar. Klik tombol di bawah untuk memverifikasi
+          alamat email Anda.
+        </p>
+
+        <p style="text-align: center">
+          <a
+            href="{{.VerifyURL}}"
+            class="button"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Verifikasi Email
+          </a>
+        </p>
+
+        <p class="muted">
+          Tautan ini akan kadaluarsa dalam {{.ExpireMinutes}} menit.
+        </p>
+
+        <p style="margin-top: 12px; font-size: 14px">
+          Jika tombol tidak berfungsi, salin dan tempel URL berikut di browser
+          Anda:
+          <br />
+          <a
+            href="{{.VerifyURL}}"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="word-break: break-all; color: #3f2305"
+          >
+            {{.VerifyURL}}
+          </a>
+        </p>
+
+        <p style="margin-top: 18px" class="muted">
+          Jika Anda tidak meminta verifikasi ini, abaikan email ini.
+        </p>
+      </div>
+
+      <div class="footer">
+        <p>Ini pesan otomatis, harap jangan balas.</p>
+        <p>Jalan Veteran No. 12-16, Malang, 65145</p>
+      </div>
+    </div>
+  </body>
+</html>
