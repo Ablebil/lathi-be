@@ -12,7 +12,6 @@ type JwtItf interface {
 	CreateAccessToken(userID uuid.UUID, username, email string, exp time.Duration) (string, error)
 	CreateRefreshToken(userID uuid.UUID, exp time.Duration) (string, error)
 	ParseAccessToken(tokenStr string) (*AccessClaims, error)
-	ParseRefreshToken(tokenStr string) (*RefreshClaims, error)
 }
 
 type AccessClaims struct {
@@ -69,18 +68,6 @@ func (jw *jwt) ParseAccessToken(tokenStr string) (*AccessClaims, error) {
 	claims := &AccessClaims{}
 	token, err := j.ParseWithClaims(tokenStr, claims, func(token *j.Token) (any, error) {
 		return jw.accessSecret, nil
-	})
-	if err != nil || !token.Valid {
-		return nil, err
-	}
-
-	return claims, nil
-}
-
-func (jw *jwt) ParseRefreshToken(tokenStr string) (*RefreshClaims, error) {
-	claims := &RefreshClaims{}
-	token, err := j.ParseWithClaims(tokenStr, claims, func(token *j.Token) (any, error) {
-		return jw.refreshSecret, nil
 	})
 	if err != nil || !token.Valid {
 		return nil, err

@@ -11,6 +11,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
 	"github.com/Ablebil/lathi-be/internal/infra/postgresql"
 	"github.com/Ablebil/lathi-be/internal/infra/redis"
+	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/bcrypt"
 	"github.com/Ablebil/lathi-be/pkg/jwt"
 	"github.com/Ablebil/lathi-be/pkg/mail"
@@ -43,6 +44,7 @@ func Start() error {
 	bcrypt := bcrypt.NewBcrypt()
 	mail := mail.NewMail(env)
 	jwt := jwt.NewJwt(env)
+	mdw := middleware.NewMiddleware(jwt)
 
 	// auth module
 	userRepository := userRepo.NewUserRepository(db)
