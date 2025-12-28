@@ -24,7 +24,6 @@ type User struct {
 	LastChapterCompleted int       `json:"last_chapter_completed" gorm:"type:int;default:0;not null"`
 	TotalWordsCollected  int       `json:"total_words_collected" gorm:"type:int;default:0;not null"`
 	IsVerified           bool      `json:"is_verified" gorm:"type:boolean;default:false;not null"`
-	RefreshToken         *string   `json:"refresh_token" gorm:"type:varchar(255)"`
 	CreatedAt            time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime;not null"`
 	UpdatedAt            time.Time `json:"updated_at" gorm:"type:timestamp;autoUpdateTime;not null"`
 }

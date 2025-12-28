@@ -10,7 +10,7 @@ import (
 func (m *middleware) Authenticate(ctx *fiber.Ctx) error {
 	header := ctx.Get("Authorization")
 	if header == "" {
-		return response.Error(ctx, response.ErrUnauthorized("you're not logged in. please login to continue"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("authorization header missing"), nil)
 	}
 
 	parts := strings.Fields(header)

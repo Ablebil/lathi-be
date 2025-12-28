@@ -5,6 +5,7 @@ import (
 
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -33,9 +34,9 @@ func (r *userRepository) GetUserByEmail(email string) (*entity.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) GetUserByRefreshToken(token string) (*entity.User, error) {
+func (r *userRepository) GetUserByID(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
-	err := r.db.Where("refresh_token = ?", token).First(&user).Error
+	err := r.db.Where("id = ?", id).First(&user).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil

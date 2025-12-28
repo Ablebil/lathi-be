@@ -136,21 +136,26 @@ func (uc *authUsecase) Login(req *dto.LoginRequest) (string, string, *response.A
 		return "", "", response.ErrInternal("failed to create refresh token")
 	}
 
-	user.RefreshToken = &refreshToken
-	if err := uc.repo.UpdateUser(user); err != nil {
-		return "", "", response.ErrInternal("failed to update user refresh token")
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
+	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
+		return "", "", response.ErrInternal("failed to store refresh token")
 	}
 
 	return accessToken, refreshToken, nil
 }
 
 func (uc *authUsecase) Refresh(req *dto.RefreshRequest) (string, string, *response.APIError) {
-	user, err := uc.repo.GetUserByRefreshToken(req.RefreshToken)
-	if err != nil {
-		return "", "", response.ErrInternal("failed to find user")
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
+	var userID string
+	if err := uc.cache.Get(ctx, cacheKey, &userID); err != nil {
+		return "", "", response.ErrUnauthorized("invalid or expired refresh token")
 	}
-	if user == nil || user.RefreshToken == nil || *user.RefreshToken != req.RefreshToken {
-		return "", "", response.ErrUnauthorized("invalid refresh token")
+
+	user, err := uc.repo.GetUserByID(uuid.MustParse(userID))
+	if err != nil || user == nil {
+		return "", "", response.ErrUnauthorized("invalid refresh or expired refresh token")
 	}
 
 	newAccessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
@@ -163,26 +168,20 @@ func (uc *authUsecase) Refresh(req *dto.RefreshRequest) (string, string, *respon
 		return "", "", response.ErrInternal("failed to create refresh token")
 	}
 
-	user.RefreshToken = &newRefreshToken
-	if err := uc.repo.UpdateUser(user); err != nil {
-		return "", "", response.ErrInternal("failed to update user refresh token")
+	_ = uc.cache.Del(ctx, cacheKey)
+	newCacheKey := fmt.Sprintf("refresh:%s", newRefreshToken)
+	if err := uc.cache.Set(ctx, newCacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
+		return "", "", response.ErrInternal("failed to store refresh token")
 	}
 
 	return newAccessToken, newRefreshToken, nil
 }
 
 func (uc *authUsecase) Logout(req *dto.LogoutRequest) *response.APIError {
-	user, err := uc.repo.GetUserByRefreshToken(req.RefreshToken)
-	if err != nil {
-		return response.ErrInternal("failed to find user")
-	}
-	if user == nil || user.RefreshToken == nil || *user.RefreshToken != req.RefreshToken {
-		return response.ErrUnauthorized("invalid refresh token")
-	}
-
-	user.RefreshToken = nil
-	if err := uc.repo.UpdateUser(user); err != nil {
-		return response.ErrInternal("failed to update user refresh token")
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
+	if err := uc.cache.Del(ctx, cacheKey); err != nil {
+		return response.ErrInternal("failed to delete refresh token")
 	}
 
 	return nil

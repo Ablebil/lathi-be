@@ -1,10 +1,13 @@
 package contract
 
-import "github.com/Ablebil/lathi-be/internal/domain/entity"
+import (
+	"github.com/Ablebil/lathi-be/internal/domain/entity"
+	"github.com/google/uuid"
+)
 
 type UserRepositoryItf interface {
 	GetUserByEmail(email string) (*entity.User, error)
-	GetUserByRefreshToken(token string) (*entity.User, error)
+	GetUserByID(id uuid.UUID) (*entity.User, error)
 	CreateUser(user *entity.User) error
 	UpdateUser(user *entity.User) error
 }
