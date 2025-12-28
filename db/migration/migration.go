@@ -15,17 +15,22 @@ func Migrate(env *config.Env, action string) {
 		return
 	}
 
+	models := []interface{}{
+		&entity.User{},
+		&entity.Dictionary{},
+		&entity.UserVocabulary{},
+		&entity.Chapter{},
+		&entity.Slide{},
+		&entity.UserStorySession{},
+	}
+
 	switch action {
 	case "up":
-		if err := db.AutoMigrate(
-			&entity.User{},
-		); err != nil {
+		if err := db.AutoMigrate(models...); err != nil {
 			slog.Error("migration failed", "error", err)
 		}
 	case "down":
-		if err := db.Migrator().DropTable(
-			&entity.User{},
-		); err != nil {
+		if err := db.Migrator().DropTable(models...); err != nil {
 			slog.Error("migration rollback failed", "error", err)
 		}
 	}
