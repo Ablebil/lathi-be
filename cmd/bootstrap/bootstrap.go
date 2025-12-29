@@ -9,6 +9,7 @@ import (
 	"github.com/Ablebil/lathi-be/db/migration"
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
+	"github.com/Ablebil/lathi-be/internal/infra/minio"
 	"github.com/Ablebil/lathi-be/internal/infra/postgresql"
 	"github.com/Ablebil/lathi-be/internal/infra/redis"
 	"github.com/Ablebil/lathi-be/internal/middleware"
@@ -21,6 +22,10 @@ import (
 	authUc "github.com/Ablebil/lathi-be/internal/app/auth/usecase"
 
 	userRepo "github.com/Ablebil/lathi-be/internal/app/user/repository"
+
+	storyHdl "github.com/Ablebil/lathi-be/internal/app/story/handler"
+	storyRepo "github.com/Ablebil/lathi-be/internal/app/story/repository"
+	storyUc "github.com/Ablebil/lathi-be/internal/app/story/usecase"
 )
 
 func Start() error {
@@ -34,22 +39,33 @@ func Start() error {
 		panic(err)
 	}
 
+	storage, err := minio.New(env)
+	if err != nil {
+		panic(err)
+	}
+
+	cache := redis.New(env)
+
 	handleArgs(env)
 
 	app := fiber.New(env)
 	v1 := app.Group("/api/v1")
 
-	cache := redis.New(env)
 	val := validator.NewValidator()
 	bcrypt := bcrypt.NewBcrypt()
 	mail := mail.NewMail(env)
 	jwt := jwt.NewJwt(env)
-	mdw := middleware.NewMiddleware(jwt)
+	mw := middleware.NewMiddleware(jwt)
 
 	// auth module
 	userRepository := userRepo.NewUserRepository(db)
 	authUsecase := authUc.NewAuthUsecase(userRepository, bcrypt, mail, cache, jwt, env)
 	authHdl.NewAuthHandler(v1, val, authUsecase)
+
+	// story module
+	storyRepository := storyRepo.NewStoryRepository(db)
+	storyUsecase := storyUc.NewStoryUsecase(storyRepository, storage, env)
+	storyHdl.NewStoryHandler(v1, val, mw, storyUsecase)
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
 }
