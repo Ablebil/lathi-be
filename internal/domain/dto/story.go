@@ -1,0 +1,58 @@
+package dto
+
+import "github.com/google/uuid"
+
+type StoryActionRequest struct {
+	ChapterID   uuid.UUID `json:"chapter_id" validate:"required,uuid"`
+	SlideID     uuid.UUID `json:"slide_id" validate:"required,uuid"`
+	ChoiceIndex *int      `json:"choice_index,omitempty"`
+}
+
+type ChapterListReponse struct {
+	ID            uuid.UUID `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	CoverImageURL string    `json:"cover_image_url"`
+	OrderIndex    int       `json:"order_index"`
+	IsLocked      bool      `json:"is_locked"`
+	IsCompleted   bool      `json:"is_completed"`
+}
+
+type ChapterContentResponse struct {
+	ChapterID uuid.UUID           `json:"chapter_id"`
+	Slides    []SlideItemResponse `json:"slides"`
+}
+
+type SlideItemResponse struct {
+	ID                 uuid.UUID            `json:"id"`
+	BackgroundImageURL string               `json:"background_image_url"`
+	CharacterImageURL  string               `json:"character_image_url"`
+	AudioFileURL       string               `json:"audio_file_url"`
+	SpeakerName        string               `json:"speaker_name"`
+	Content            string               `json:"content"`
+	NextSlideID        *uuid.UUID           `json:"next_slide_id"`
+	Vocabularies       []VocabItemResponse  `json:"vocabularies"`
+	Choices            []ChoiceItemResponse `json:"choices"`
+}
+
+type VocabItemResponse struct {
+	ID        uuid.UUID `json:"id"`
+	WordKrama string    `json:"word_krama"`
+	WordNgoko string    `json:"word_ngoko"`
+	WordIndo  string    `json:"word_indo"`
+}
+
+type ChoiceItemResponse struct {
+	Index int    `json:"index"`
+	Text  string `json:"text"`
+}
+
+type StoryActionResponse struct {
+	IsGameOver        bool       `json:"is_game_over"`
+	IsCompleted       bool       `json:"is_completed"`
+	Message           string     `json:"message"` // msg if gameover/completed
+	RemainingHearts   int        `json:"remaining_hearts"`
+	CharacterReaction string     `json:"character_reaction"` // happy, angry, neutral
+	CharacterImageURL string     `json:"character_image_url"`
+	NextSlideID       *uuid.UUID `json:"next_slide_id"`
+}
