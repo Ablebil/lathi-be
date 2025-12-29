@@ -33,6 +33,7 @@ type Slide struct {
 	BackgroundImageURL string      `json:"background_image_url" gorm:"type:varchar(255);not null"`
 	CharacterImageURL  string      `json:"character_image_url" gorm:"type:varchar(255);not null"`
 	AudioFileURL       string      `json:"audio_file_url" gorm:"type:varchar(255);not null"`
+	SpeakerName        string      `json:"speaker_name" gorm:"type:varchar(100);not null"`
 	Content            string      `json:"content" gorm:"type:text;not null"`
 	NextSlideID        *uuid.UUID  `json:"next_slide_id" gorm:"type:char(36)"`
 	Choices            types.JSONB `json:"choices" gorm:"type:jsonb;default:'null'::jsonb"`
