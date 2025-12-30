@@ -23,8 +23,18 @@ func New(env *config.Env) *fiber.App {
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"message": err.Error(),
+			code := fiber.StatusInternalServerError
+			if e, ok := err.(*fiber.Error); ok {
+				code = e.Code
+			}
+
+			return ctx.Status(code).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"type":    "app_error",
+					"message": err.Error(),
+					"status":  code,
+				},
 			})
 		},
 	})
