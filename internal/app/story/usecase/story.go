@@ -254,13 +254,18 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		_ = uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
 	}
 
+	finalImageURL := ""
+	if currentSlide.CharacterImageURL != "" {
+		finalImageURL = uc.storage.GetObjectURL(strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp") + "_" + charExpression + ".webp")
+	}
+
 	return &dto.StoryActionResponse{
 		IsGameOver:        isGameOver,
 		IsCompleted:       isCompleted,
 		Message:           message,
 		RemainingHearts:   session.CurrentHearts,
 		CharacterReaction: charExpression,
-		CharacterImageURL: uc.storage.GetObjectURL(strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp") + "_" + charExpression + ".webp"),
+		CharacterImageURL: finalImageURL,
 		NextSlideID:       nextSlideID,
 	}, nil
 }
