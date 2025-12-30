@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
@@ -19,9 +20,9 @@ func NewUserRepository(db *gorm.DB) contract.UserRepositoryItf {
 	}
 }
 
-func (r *userRepository) GetUserByEmail(email string) (*entity.User, error) {
+func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var user entity.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -34,9 +35,9 @@ func (r *userRepository) GetUserByEmail(email string) (*entity.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) GetUserByID(id uuid.UUID) (*entity.User, error) {
+func (r *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user entity.User
-	err := r.db.Where("id = ?", id).First(&user).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -49,10 +50,10 @@ func (r *userRepository) GetUserByID(id uuid.UUID) (*entity.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) CreateUser(user *entity.User) error {
-	return r.db.Create(user).Error
+func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepository) UpdateUser(user *entity.User) error {
-	return r.db.Save(user).Error
+func (r *userRepository) UpdateUser(ctx context.Context, user *entity.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
 }

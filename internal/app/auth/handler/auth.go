@@ -37,7 +37,7 @@ func (h *authHandler) register(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Register(req); err != nil {
+	if err := h.uc.Register(ctx.Context(), req); err != nil {
 		return response.Error(ctx, err, nil)
 	}
 
@@ -54,7 +54,7 @@ func (h *authHandler) verify(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Verify(req); err != nil {
+	if err := h.uc.Verify(ctx.Context(), req); err != nil {
 		return response.Error(ctx, err, nil)
 	}
 
@@ -71,7 +71,7 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	accessToken, refreshToken, err := h.uc.Login(req)
+	accessToken, refreshToken, err := h.uc.Login(ctx.Context(), req)
 	if err != nil {
 		return response.Error(ctx, err, nil)
 	}
@@ -92,7 +92,7 @@ func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	accessToken, refreshToken, err := h.uc.Refresh(req)
+	accessToken, refreshToken, err := h.uc.Refresh(ctx.Context(), req)
 	if err != nil {
 		return response.Error(ctx, err, nil)
 	}
@@ -113,7 +113,7 @@ func (h *authHandler) logout(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Logout(req); err != nil {
+	if err := h.uc.Logout(ctx.Context(), req); err != nil {
 		return response.Error(ctx, err, nil)
 	}
 

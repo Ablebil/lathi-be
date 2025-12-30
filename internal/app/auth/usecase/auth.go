@@ -37,8 +37,8 @@ func NewAuthUsecase(userRepo contract.UserRepositoryItf, bcrypt bcrypt.BcryptItf
 	}
 }
 
-func (uc *authUsecase) Register(req *dto.RegisterRequest) *response.APIError {
-	user, err := uc.repo.GetUserByEmail(req.Email)
+func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *response.APIError {
+	user, err := uc.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return response.ErrInternal("failed to find user")
 	}
@@ -56,14 +56,13 @@ func (uc *authUsecase) Register(req *dto.RegisterRequest) *response.APIError {
 		Email:    req.Email,
 		Password: hashed,
 	}
-	if err := uc.repo.CreateUser(newUser); err != nil {
+	if err := uc.repo.CreateUser(ctx, newUser); err != nil {
 		return response.ErrInternal("failed to create user")
 	}
 
 	// generate verif token
 	token := uuid.NewString()
 	cacheKey := fmt.Sprintf("verify:%s", token)
-	ctx := context.Background()
 	if err := uc.cache.Set(ctx, cacheKey, newUser.Email, uc.env.VerifTokenTtl); err != nil {
 		return response.ErrInternal("failed to store verification token")
 	}
@@ -86,15 +85,14 @@ func (uc *authUsecase) Register(req *dto.RegisterRequest) *response.APIError {
 	return nil
 }
 
-func (uc *authUsecase) Verify(req *dto.VerifyRequest) *response.APIError {
+func (uc *authUsecase) Verify(ctx context.Context, req *dto.VerifyRequest) *response.APIError {
 	cacheKey := fmt.Sprintf("verify:%s", req.Token)
-	ctx := context.Background()
 	var email string
 	if err := uc.cache.Get(ctx, cacheKey, &email); err != nil {
 		return response.ErrBadRequest("invalid or expired token")
 	}
 
-	user, err := uc.repo.GetUserByEmail(email)
+	user, err := uc.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.ErrNotFound("failed to find user")
 	}
@@ -106,7 +104,7 @@ func (uc *authUsecase) Verify(req *dto.VerifyRequest) *response.APIError {
 	}
 
 	user.IsVerified = true
-	if err := uc.repo.UpdateUser(user); err != nil {
+	if err := uc.repo.UpdateUser(ctx, user); err != nil {
 		return response.ErrInternal("failed to update user verification")
 	}
 
@@ -114,8 +112,8 @@ func (uc *authUsecase) Verify(req *dto.VerifyRequest) *response.APIError {
 	return nil
 }
 
-func (uc *authUsecase) Login(req *dto.LoginRequest) (string, string, *response.APIError) {
-	user, err := uc.repo.GetUserByEmail(req.Email)
+func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (string, string, *response.APIError) {
+	user, err := uc.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return "", "", response.ErrInternal("failed to find user")
 	}
@@ -136,7 +134,6 @@ func (uc *authUsecase) Login(req *dto.LoginRequest) (string, string, *response.A
 		return "", "", response.ErrInternal("failed to create refresh token")
 	}
 
-	ctx := context.Background()
 	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
 	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
 		return "", "", response.ErrInternal("failed to store refresh token")
@@ -145,15 +142,14 @@ func (uc *authUsecase) Login(req *dto.LoginRequest) (string, string, *response.A
 	return accessToken, refreshToken, nil
 }
 
-func (uc *authUsecase) Refresh(req *dto.RefreshRequest) (string, string, *response.APIError) {
-	ctx := context.Background()
+func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (string, string, *response.APIError) {
 	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
 	var userID string
 	if err := uc.cache.Get(ctx, cacheKey, &userID); err != nil {
 		return "", "", response.ErrUnauthorized("invalid or expired refresh token")
 	}
 
-	user, err := uc.repo.GetUserByID(uuid.MustParse(userID))
+	user, err := uc.repo.GetUserByID(ctx, uuid.MustParse(userID))
 	if err != nil || user == nil {
 		return "", "", response.ErrUnauthorized("invalid refresh or expired refresh token")
 	}
@@ -177,8 +173,7 @@ func (uc *authUsecase) Refresh(req *dto.RefreshRequest) (string, string, *respon
 	return newAccessToken, newRefreshToken, nil
 }
 
-func (uc *authUsecase) Logout(req *dto.LogoutRequest) *response.APIError {
-	ctx := context.Background()
+func (uc *authUsecase) Logout(ctx context.Context, req *dto.LogoutRequest) *response.APIError {
 	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
 	if err := uc.cache.Del(ctx, cacheKey); err != nil {
 		return response.ErrInternal("failed to delete refresh token")
