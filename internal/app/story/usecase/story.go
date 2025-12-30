@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -116,6 +117,24 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 	}, nil
 }
 
+func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uuid.UUID) (*dto.UserSessionResponse, *response.APIError) {
+	session, err := uc.repo.FindSession(ctx, userID, chapterID)
+	if err != nil {
+		return nil, response.ErrInternal("failed to fetch session")
+	}
+	if session == nil {
+		return nil, nil // user hasn't played this chapter yet
+	}
+
+	return &dto.UserSessionResponse{
+		SessionID:      session.ID,
+		CurrentSlideID: session.CurrentSlideID,
+		CurrentHearts:  session.CurrentHearts,
+		IsGameOver:     session.IsGameOver,
+		IsCompleted:    session.IsCompleted,
+	}, nil
+}
+
 func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) *response.APIError {
 	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
 	if err != nil {
@@ -191,14 +210,18 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 
 	// update game state
 	session.CurrentHearts += moodImpact
-
 	isGameOver := false
 	message := ""
+
+	speaker := currentSlide.SpeakerName
+	if speaker == "" {
+		speaker = "Panjenenganipun"
+	}
 
 	if session.CurrentHearts <= 0 {
 		session.CurrentHearts = 0
 		isGameOver = true
-		message = "Beliau kecewa dengan ucapanmu."
+		message = fmt.Sprintf("%s kuciwo karo omonganmu. Coba maneh ya!", speaker)
 	}
 
 	session.IsGameOver = isGameOver
@@ -210,6 +233,7 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	if !isGameOver && nextSlideID == nil {
 		isCompleted = true
 		session.IsCompleted = true
+		message = "Sugeng! Sampeyan wis rampung crita iki."
 
 		chapter, _ := uc.repo.GetChapterByID(ctx, req.ChapterID)
 		if chapter != nil {

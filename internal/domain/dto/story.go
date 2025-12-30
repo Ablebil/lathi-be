@@ -47,6 +47,14 @@ type ChoiceItemResponse struct {
 	Text  string `json:"text"`
 }
 
+type UserSessionResponse struct {
+	SessionID      uuid.UUID `json:"session_id"`
+	CurrentSlideID uuid.UUID `json:"current_slide_id"`
+	CurrentHearts  int       `json:"current_hearts"`
+	IsGameOver     bool      `json:"is_game_over"`
+	IsCompleted    bool      `json:"is_completed"`
+}
+
 type StoryActionResponse struct {
 	IsGameOver        bool       `json:"is_game_over"`
 	IsCompleted       bool       `json:"is_completed"`

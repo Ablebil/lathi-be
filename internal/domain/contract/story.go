@@ -11,8 +11,9 @@ import (
 
 type StoryUsecaseItf interface {
 	GetChapterList(ctx context.Context, userID uuid.UUID) ([]dto.ChapterListReponse, *response.APIError)
-	GetChapterContent(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) (*dto.ChapterContentResponse, *response.APIError)
-	StartSession(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) *response.APIError
+	GetChapterContent(ctx context.Context, userID, chapterID uuid.UUID) (*dto.ChapterContentResponse, *response.APIError)
+	GetUserSession(ctx context.Context, userID, chapterID uuid.UUID) (*dto.UserSessionResponse, *response.APIError)
+	StartSession(ctx context.Context, userID, chapterID uuid.UUID) *response.APIError
 	SubmitAction(ctx context.Context, userID uuid.UUID, req *dto.StoryActionRequest) (*dto.StoryActionResponse, *response.APIError)
 }
 

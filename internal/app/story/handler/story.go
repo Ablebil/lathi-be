@@ -24,6 +24,7 @@ func NewStoryHandler(router fiber.Router, validator validator.ValidatorItf, mw m
 	storyRouter := router.Group("/stories", mw.Authenticate)
 	storyRouter.Get("/chapters", handler.getChapterList)
 	storyRouter.Get("/chapters/:id/content", handler.getChapterContent)
+	storyRouter.Get("/chapters/:id/session", handler.getUserSession)
 	storyRouter.Post("/chapters/:id/start", handler.startSession)
 	storyRouter.Post("/action", handler.submitAction)
 }
@@ -62,6 +63,27 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "chapter content retrieved successfully", resp)
+}
+
+func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+	}
+	userID, _ := uuid.Parse(userIDStr)
+
+	chapterIDStr := ctx.Params("id")
+	chapterID, err := uuid.Parse(chapterIDStr)
+	if err != nil {
+		return response.Error(ctx, response.ErrBadRequest("invalid chapter ID"), err)
+	}
+
+	resp, apiErr := h.uc.GetUserSession(ctx.Context(), userID, chapterID)
+	if apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
+	}
+
+	return response.Success(ctx, fiber.StatusOK, "user session retrieved successfully", resp)
 }
 
 func (h *storyHandler) startSession(ctx *fiber.Ctx) error {

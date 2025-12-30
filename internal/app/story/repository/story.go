@@ -86,6 +86,7 @@ func (r *storyRepository) FindSession(ctx context.Context, userID, chapterID uui
 }
 
 func (r *storyRepository) CreateSession(ctx context.Context, session *entity.UserStorySession) error {
+	// upsert session
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "chapter_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"current_slide_id", "current_hearts", "is_game_over", "is_completed", "history_log", "updated_at"}),
