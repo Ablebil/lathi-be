@@ -35,12 +35,15 @@ func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([
 		return nil, response.ErrInternal("failed to get chapters")
 	}
 
+	lastCompletedOrder, err := uc.repo.GetUserLastCompletedChapter(ctx, userID)
+	if err != nil {
+		return nil, response.ErrInternal("failed to get user progress")
+	}
+
 	var resp []dto.ChapterListReponse
 	for _, ch := range chapters {
-		isLocked := false
-		if ch.OrderIndex > 1 {
-			isLocked = true
-		}
+		isLocked := ch.OrderIndex > (lastCompletedOrder + 1)
+		isCompleted := ch.OrderIndex <= lastCompletedOrder
 
 		resp = append(resp, dto.ChapterListReponse{
 			ID:            ch.ID,
@@ -49,7 +52,7 @@ func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([
 			CoverImageURL: uc.storage.GetObjectURL(ch.CoverImageURL),
 			OrderIndex:    ch.OrderIndex,
 			IsLocked:      isLocked,
-			IsCompleted:   false,
+			IsCompleted:   isCompleted,
 		})
 	}
 
