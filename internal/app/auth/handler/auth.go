@@ -37,8 +37,8 @@ func (h *authHandler) register(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Register(ctx.Context(), req); err != nil {
-		return response.Error(ctx, err, nil)
+	if apiErr := h.uc.Register(ctx.Context(), req); apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusCreated, "registration successful, please check your email for verification", nil)
@@ -54,8 +54,8 @@ func (h *authHandler) verify(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Verify(ctx.Context(), req); err != nil {
-		return response.Error(ctx, err, nil)
+	if apiErr := h.uc.Verify(ctx.Context(), req); apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "email verification successful", nil)
@@ -71,15 +71,12 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	accessToken, refreshToken, err := h.uc.Login(ctx.Context(), req)
-	if err != nil {
-		return response.Error(ctx, err, nil)
+	resp, apiErr := h.uc.Login(ctx.Context(), req)
+	if apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "login successful", dto.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	})
+	return response.Success(ctx, fiber.StatusOK, "login successful", resp)
 }
 
 func (h *authHandler) refresh(ctx *fiber.Ctx) error {
@@ -92,15 +89,12 @@ func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	accessToken, refreshToken, err := h.uc.Refresh(ctx.Context(), req)
-	if err != nil {
-		return response.Error(ctx, err, nil)
+	resp, apiErr := h.uc.Refresh(ctx.Context(), req)
+	if apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "refresh tokens successful", dto.TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	})
+	return response.Success(ctx, fiber.StatusOK, "refresh tokens successful", resp)
 }
 
 func (h *authHandler) logout(ctx *fiber.Ctx) error {
@@ -113,8 +107,8 @@ func (h *authHandler) logout(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if err := h.uc.Logout(ctx.Context(), req); err != nil {
-		return response.Error(ctx, err, nil)
+	if apiErr := h.uc.Logout(ctx.Context(), req); apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "logout successful", nil)

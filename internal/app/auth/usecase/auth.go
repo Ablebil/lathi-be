@@ -112,65 +112,71 @@ func (uc *authUsecase) Verify(ctx context.Context, req *dto.VerifyRequest) *resp
 	return nil
 }
 
-func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (string, string, *response.APIError) {
+func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.TokenResponse, *response.APIError) {
 	user, err := uc.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		return "", "", response.ErrInternal("failed to find user")
+		return nil, response.ErrInternal("failed to find user")
 	}
 	if user == nil || !uc.bcrypt.Compare(req.Password, user.Password) {
-		return "", "", response.ErrUnauthorized("invalid email or password")
+		return nil, response.ErrUnauthorized("invalid email or password")
 	}
 	if !user.IsVerified {
-		return "", "", response.ErrUnauthorized("email not verified")
+		return nil, response.ErrUnauthorized("email not verified")
 	}
 
 	accessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
 	if err != nil {
-		return "", "", response.ErrInternal("failed to create access token")
+		return nil, response.ErrInternal("failed to create access token")
 	}
 
 	refreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
 	if err != nil {
-		return "", "", response.ErrInternal("failed to create refresh token")
+		return nil, response.ErrInternal("failed to create refresh token")
 	}
 
 	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
 	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
-		return "", "", response.ErrInternal("failed to store refresh token")
+		return nil, response.ErrInternal("failed to store refresh token")
 	}
 
-	return accessToken, refreshToken, nil
+	return &dto.TokenResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
-func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (string, string, *response.APIError) {
+func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*dto.TokenResponse, *response.APIError) {
 	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
 	var userID string
 	if err := uc.cache.Get(ctx, cacheKey, &userID); err != nil {
-		return "", "", response.ErrUnauthorized("invalid or expired refresh token")
+		return nil, response.ErrUnauthorized("invalid or expired refresh token")
 	}
 
 	user, err := uc.repo.GetUserByID(ctx, uuid.MustParse(userID))
 	if err != nil || user == nil {
-		return "", "", response.ErrUnauthorized("invalid refresh or expired refresh token")
+		return nil, response.ErrUnauthorized("invalid refresh or expired refresh token")
 	}
 
 	newAccessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
 	if err != nil {
-		return "", "", response.ErrInternal("failed to create access token")
+		return nil, response.ErrInternal("failed to create access token")
 	}
 
 	newRefreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
 	if err != nil {
-		return "", "", response.ErrInternal("failed to create refresh token")
+		return nil, response.ErrInternal("failed to create refresh token")
 	}
 
 	_ = uc.cache.Del(ctx, cacheKey)
 	newCacheKey := fmt.Sprintf("refresh:%s", newRefreshToken)
 	if err := uc.cache.Set(ctx, newCacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
-		return "", "", response.ErrInternal("failed to store refresh token")
+		return nil, response.ErrInternal("failed to store refresh token")
 	}
 
-	return newAccessToken, newRefreshToken, nil
+	return &dto.TokenResponse{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+	}, nil
 }
 
 func (uc *authUsecase) Logout(ctx context.Context, req *dto.LogoutRequest) *response.APIError {
