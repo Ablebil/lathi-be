@@ -54,7 +54,7 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 	chapterIDStr := ctx.Params("id")
 	chapterID, err := uuid.Parse(chapterIDStr)
 	if err != nil {
-		return response.Error(ctx, response.ErrBadRequest("invalid chapter ID"), err)
+		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
 	resp, apiErr := h.uc.GetChapterContent(ctx.Context(), userID, chapterID)
@@ -75,7 +75,7 @@ func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 	chapterIDStr := ctx.Params("id")
 	chapterID, err := uuid.Parse(chapterIDStr)
 	if err != nil {
-		return response.Error(ctx, response.ErrBadRequest("invalid chapter ID"), err)
+		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
 	resp, apiErr := h.uc.GetUserSession(ctx.Context(), userID, chapterID)
@@ -96,7 +96,7 @@ func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
 	chapterIDStr := ctx.Params("id")
 	chapterID, err := uuid.Parse(chapterIDStr)
 	if err != nil {
-		return response.Error(ctx, response.ErrBadRequest("invalid chapter ID"), err)
+		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
 	if apiErr := h.uc.StartSession(ctx.Context(), userID, chapterID); apiErr != nil {

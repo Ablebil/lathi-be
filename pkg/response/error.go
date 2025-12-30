@@ -34,6 +34,17 @@ func NewValidationError(err error) *APIError {
 	}
 }
 
+func NewParamValidationError(field, issue string) *APIError {
+	return &APIError{
+		Type:    "validation_error",
+		Message: "Validation failed",
+		Status:  400,
+		Fields: map[string]string{
+			field: issue,
+		},
+	}
+}
+
 // error helpers
 func ErrInternal(detail string) *APIError {
 	return NewAPIError(500, "internal_error", "Internal server error", detail)
