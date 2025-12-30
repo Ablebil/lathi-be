@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
+	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
@@ -23,6 +24,8 @@ func NewStoryHandler(router fiber.Router, validator validator.ValidatorItf, mw m
 	storyRouter := router.Group("/stories", mw.Authenticate)
 	storyRouter.Get("/chapters", handler.getChapterList)
 	storyRouter.Get("/chapters/:id/content", handler.getChapterContent)
+	storyRouter.Post("/chapters/:id/start", handler.startSession)
+	storyRouter.Post("/action", handler.submitAction)
 }
 
 func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {
@@ -59,4 +62,48 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "chapter content retrieved successfully", resp)
+}
+
+func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+	}
+	userID, _ := uuid.Parse(userIDStr)
+
+	chapterIDStr := ctx.Params("id")
+	chapterID, err := uuid.Parse(chapterIDStr)
+	if err != nil {
+		return response.Error(ctx, response.ErrBadRequest("invalid chapter ID"), err)
+	}
+
+	if apiErr := h.uc.StartSession(ctx.Context(), userID, chapterID); apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
+	}
+
+	return response.Success(ctx, fiber.StatusOK, "session started successfully", nil)
+}
+
+func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+	}
+	userID, _ := uuid.Parse(userIDStr)
+
+	req := new(dto.StoryActionRequest)
+	if err := ctx.BodyParser(&req); err != nil {
+		return response.Error(ctx, response.ErrBadRequest("failed parsing request body"), err)
+	}
+
+	if err := h.val.ValidateStruct(req); err != nil {
+		return response.Error(ctx, response.NewValidationError(err), err)
+	}
+
+	resp, apiErr := h.uc.SubmitAction(ctx.Context(), userID, req)
+	if apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
+	}
+
+	return response.Success(ctx, fiber.StatusOK, "action submitted", resp)
 }

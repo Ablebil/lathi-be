@@ -3,10 +3,13 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"strings"
+	"time"
 
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
+	"github.com/Ablebil/lathi-be/internal/domain/entity"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/google/uuid"
@@ -107,5 +110,130 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 	return &dto.ChapterContentResponse{
 		ChapterID: chapter.ID,
 		Slides:    slidesResp,
+	}, nil
+}
+
+func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) *response.APIError {
+	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
+	if err != nil {
+		return response.ErrInternal("failed to fetch chapter info")
+	}
+	if chapter == nil {
+		return response.ErrNotFound("chapter not found")
+	}
+	if len(chapter.Slides) == 0 {
+		return response.ErrInternal("chapter has no slides")
+	}
+
+	session := &entity.UserStorySession{
+		UserID:         userID,
+		ChapterID:      chapterID,
+		CurrentSlideID: chapter.Slides[0].ID,
+		CurrentHearts:  3,
+		IsGameOver:     false,
+		IsCompleted:    false,
+		HistoryLog:     []byte("[]"),
+	}
+
+	if err := uc.repo.CreateSession(ctx, session); err != nil {
+		return response.ErrInternal("failed to starts")
+	}
+
+	return nil
+}
+
+func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req *dto.StoryActionRequest) (*dto.StoryActionResponse, *response.APIError) {
+	session, err := uc.repo.FindSession(ctx, userID, req.ChapterID)
+	if err != nil {
+		return nil, response.ErrInternal("failed to find session")
+	}
+	if session == nil {
+		return nil, response.ErrBadRequest("session not found, please start session first")
+	}
+	if session.IsGameOver || session.IsCompleted {
+		return nil, response.ErrBadRequest("session already ended")
+	}
+
+	currentSlide, err := uc.repo.GetSlideByID(ctx, req.SlideID)
+	if err != nil || currentSlide == nil {
+		return nil, response.ErrNotFound("slide not found")
+	}
+
+	var nextSlideID *uuid.UUID = currentSlide.NextSlideID
+	charExpression := "neutral"
+	moodImpact := 0
+
+	// process choice if any
+	if req.ChoiceIndex != nil {
+		var choices []struct {
+			NextSlideID       uuid.UUID `json:"next_slide_id"`
+			MoodImpact        int       `json:"mood_impact"`
+			CharacterReaction string    `json:"character_reaction"`
+		}
+
+		if err := json.Unmarshal(currentSlide.Choices, &choices); err != nil {
+			return nil, response.ErrInternal("failed to parse slide choices")
+		}
+
+		idx := *req.ChoiceIndex
+		if idx < 0 || idx >= len(choices) {
+			return nil, response.ErrBadRequest("invalid choice index")
+		}
+
+		selected := choices[idx]
+		nextSlideID = &selected.NextSlideID
+		moodImpact = selected.MoodImpact
+		charExpression = selected.CharacterReaction
+	}
+
+	// update game state
+	session.CurrentHearts += moodImpact
+
+	isGameOver := false
+	message := ""
+
+	if session.CurrentHearts <= 0 {
+		session.CurrentHearts = 0
+		isGameOver = true
+		message = "Beliau kecewa dengan ucapanmu."
+	}
+
+	session.IsGameOver = isGameOver
+	if !isGameOver && nextSlideID != nil {
+		session.CurrentSlideID = *nextSlideID
+	}
+
+	isCompleted := false
+	if !isGameOver && nextSlideID == nil {
+		isCompleted = true
+		session.IsCompleted = true
+
+		chapter, _ := uc.repo.GetChapterByID(ctx, req.ChapterID)
+		if chapter != nil {
+			_ = uc.repo.UpdateUserLastCompletedChapter(ctx, userID, chapter.OrderIndex)
+		}
+	}
+
+	session.UpdatedAt = time.Now()
+	if err := uc.repo.UpdateSession(ctx, session); err != nil {
+		return nil, response.ErrInternal("failed to save progress")
+	}
+
+	if len(currentSlide.Vocabularies) > 0 {
+		var vocabIDs []uuid.UUID
+		for _, v := range currentSlide.Vocabularies {
+			vocabIDs = append(vocabIDs, v.ID)
+		}
+		_ = uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
+	}
+
+	return &dto.StoryActionResponse{
+		IsGameOver:        isGameOver,
+		IsCompleted:       isCompleted,
+		Message:           message,
+		RemainingHearts:   session.CurrentHearts,
+		CharacterReaction: charExpression,
+		CharacterImageURL: uc.storage.GetObjectURL(strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp") + "_" + charExpression + ".webp"),
+		NextSlideID:       nextSlideID,
 	}, nil
 }

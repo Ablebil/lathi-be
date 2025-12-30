@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type storyRepository struct {
@@ -66,4 +68,64 @@ func (r *storyRepository) GetSlideByID(ctx context.Context, id uuid.UUID) (*enti
 	}
 
 	return &slide, nil
+}
+
+func (r *storyRepository) FindSession(ctx context.Context, userID, chapterID uuid.UUID) (*entity.UserStorySession, error) {
+	var session entity.UserStorySession
+	err := r.db.WithContext(ctx).
+		Where("user_id = ? AND chapter_id = ?", userID, chapterID).
+		First(&session).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &session, nil
+}
+
+func (r *storyRepository) CreateSession(ctx context.Context, session *entity.UserStorySession) error {
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "chapter_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"current_slide_id", "current_hearts", "is_game_over", "is_completed", "history_log", "updated_at"}),
+	}).Create(session).Error
+}
+
+func (r *storyRepository) UpdateSession(ctx context.Context, session *entity.UserStorySession) error {
+	return r.db.WithContext(ctx).Save(session).Error
+}
+
+func (r *storyRepository) GetUserLastCompletedChapter(ctx context.Context, userID uuid.UUID) (int, error) {
+	var user entity.User
+	if err := r.db.WithContext(ctx).Select("last_chapter_completed").First(&user, userID).Error; err != nil {
+		return 0, err
+	}
+	return user.LastChapterCompleted, nil
+}
+
+func (r *storyRepository) UpdateUserLastCompletedChapter(ctx context.Context, userID uuid.UUID, orderIndex int) error {
+	// udpate only if new orderIndex > current value
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ? AND last_chapter_completed < ?", userID, orderIndex).
+		Update("last_chapter_completed", orderIndex).Error
+}
+
+func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) error {
+	if len(vocabIDs) == 0 {
+		return nil
+	}
+
+	userVocabs := make([]entity.UserVocabulary, len(vocabIDs))
+	for i, vid := range vocabIDs {
+		userVocabs[i] = entity.UserVocabulary{
+			UserID:       userID,
+			DictionaryID: vid,
+			UnlockedAt:   time.Now(),
+		}
+	}
+
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&userVocabs).Error
 }
