@@ -11,6 +11,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
+	"github.com/Ablebil/lathi-be/internal/domain/types"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/google/uuid"
@@ -126,12 +127,18 @@ func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uu
 		return nil, nil // user hasn't played this chapter yet
 	}
 
+	var history []dto.HistoryEntry
+	if len(session.HistoryLog) > 0 {
+		_ = json.Unmarshal(session.HistoryLog, &history)
+	}
+
 	return &dto.UserSessionResponse{
 		SessionID:      session.ID,
 		CurrentSlideID: session.CurrentSlideID,
 		CurrentHearts:  session.CurrentHearts,
 		IsGameOver:     session.IsGameOver,
 		IsCompleted:    session.IsCompleted,
+		HistoryLog:     history,
 	}, nil
 }
 
@@ -181,6 +188,24 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		return nil, response.ErrNotFound("slide not found")
 	}
 
+	// append to history log
+	var history []dto.HistoryEntry
+	if len(session.HistoryLog) > 0 {
+		_ = json.Unmarshal(session.HistoryLog, &history)
+	}
+
+	speakerName := currentSlide.SpeakerName
+	if speakerName == "" {
+		speakerName = "Narator"
+	}
+
+	history = append(history, dto.HistoryEntry{
+		Speaker:   speakerName,
+		Text:      currentSlide.Content,
+		IsUser:    false,
+		Timestamp: time.Now(),
+	})
+
 	var nextSlideID *uuid.UUID = currentSlide.NextSlideID
 	charExpression := "neutral"
 	moodImpact := 0
@@ -188,6 +213,7 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	// process choice if any
 	if req.ChoiceIndex != nil {
 		var choices []struct {
+			Text              string    `json:"text"`
 			NextSlideID       uuid.UUID `json:"next_slide_id"`
 			MoodImpact        int       `json:"mood_impact"`
 			CharacterReaction string    `json:"character_reaction"`
@@ -206,22 +232,32 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		nextSlideID = &selected.NextSlideID
 		moodImpact = selected.MoodImpact
 		charExpression = selected.CharacterReaction
+
+		history = append(history, dto.HistoryEntry{
+			Speaker:   "Andi",
+			Text:      selected.Text,
+			IsUser:    true,
+			Timestamp: time.Now(),
+		})
 	}
+
+	newHistoryJSON, _ := json.Marshal(history)
+	session.HistoryLog = types.JSONB(newHistoryJSON)
 
 	// update game state
 	session.CurrentHearts += moodImpact
 	isGameOver := false
 	message := ""
 
-	speaker := currentSlide.SpeakerName
-	if speaker == "" {
-		speaker = "Panjenenganipun"
+	feedbackSpeaker := currentSlide.SpeakerName
+	if feedbackSpeaker == "" {
+		feedbackSpeaker = "Panjenenganipun"
 	}
 
 	if session.CurrentHearts <= 0 {
 		session.CurrentHearts = 0
 		isGameOver = true
-		message = fmt.Sprintf("%s kuciwo karo omonganmu. Coba maneh ya!", speaker)
+		message = fmt.Sprintf("%s kuciwo karo omonganmu. Coba maneh ya!", feedbackSpeaker)
 	}
 
 	session.IsGameOver = isGameOver
@@ -246,6 +282,7 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		return nil, response.ErrInternal("failed to save progress")
 	}
 
+	// unlock vocabs if any
 	if len(currentSlide.Vocabularies) > 0 {
 		var vocabIDs []uuid.UUID
 		for _, v := range currentSlide.Vocabularies {

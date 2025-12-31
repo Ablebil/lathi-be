@@ -1,11 +1,22 @@
 package dto
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type StoryActionRequest struct {
 	ChapterID   uuid.UUID `json:"chapter_id" validate:"required,uuid"`
 	SlideID     uuid.UUID `json:"slide_id" validate:"required,uuid"`
 	ChoiceIndex *int      `json:"choice_index,omitempty"`
+}
+
+type HistoryEntry struct {
+	Speaker   string    `json:"speaker"`
+	Text      string    `json:"text"`
+	IsUser    bool      `json:"is_user"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type ChapterListReponse struct {
@@ -48,11 +59,12 @@ type ChoiceItemResponse struct {
 }
 
 type UserSessionResponse struct {
-	SessionID      uuid.UUID `json:"session_id"`
-	CurrentSlideID uuid.UUID `json:"current_slide_id"`
-	CurrentHearts  int       `json:"current_hearts"`
-	IsGameOver     bool      `json:"is_game_over"`
-	IsCompleted    bool      `json:"is_completed"`
+	SessionID      uuid.UUID      `json:"session_id"`
+	CurrentSlideID uuid.UUID      `json:"current_slide_id"`
+	CurrentHearts  int            `json:"current_hearts"`
+	IsGameOver     bool           `json:"is_game_over"`
+	IsCompleted    bool           `json:"is_completed"`
+	HistoryLog     []HistoryEntry `json:"history_log"`
 }
 
 type StoryActionResponse struct {
