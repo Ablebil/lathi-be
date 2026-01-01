@@ -68,11 +68,12 @@ type UserSessionResponse struct {
 }
 
 type StoryActionResponse struct {
-	IsGameOver        bool       `json:"is_game_over"`
-	IsCompleted       bool       `json:"is_completed"`
-	Message           string     `json:"message"` // msg if gameover/completed
-	RemainingHearts   int        `json:"remaining_hearts"`
-	CharacterReaction string     `json:"character_reaction"` // happy, angry, neutral
-	CharacterImageURL string     `json:"character_image_url"`
-	NextSlideID       *uuid.UUID `json:"next_slide_id"`
+	IsGameOver        bool           `json:"is_game_over"`
+	IsCompleted       bool           `json:"is_completed"`
+	Message           string         `json:"message"` // msg if gameover/completed
+	RemainingHearts   int            `json:"remaining_hearts"`
+	CharacterReaction string         `json:"character_reaction"` // happy, angry, neutral
+	CharacterImageURL string         `json:"character_image_url"`
+	NextSlideID       *uuid.UUID     `json:"next_slide_id"`
+	HistoryLog        []HistoryEntry `json:"history_log"`
 }

@@ -329,5 +329,6 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		CharacterReaction: charExpression,
 		CharacterImageURL: finalImageURL,
 		NextSlideID:       nextSlideID,
+		HistoryLog:        history,
 	}, nil
 }
