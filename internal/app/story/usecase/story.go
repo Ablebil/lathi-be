@@ -293,7 +293,15 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 
 	finalImageURL := ""
 	if currentSlide.CharacterImageURL != "" {
-		finalImageURL = uc.storage.GetObjectURL(strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp") + "_" + charExpression + ".webp")
+		basePath := strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp")
+		lastUnderscoreIndex := strings.LastIndex(basePath, "_")
+
+		if lastUnderscoreIndex != -1 {
+			baseName := basePath[:lastUnderscoreIndex]
+			finalImageURL = uc.storage.GetObjectURL(baseName + "_" + charExpression + ".webp")
+		} else {
+			finalImageURL = uc.storage.GetObjectURL(basePath + "_" + charExpression + ".webp")
+		}
 	}
 
 	return &dto.StoryActionResponse{
