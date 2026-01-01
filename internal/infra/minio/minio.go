@@ -37,5 +37,8 @@ func New(env *config.Env) (MinioItf, error) {
 }
 
 func (m *minio) GetObjectURL(object string) string {
+	if object == "" {
+		return ""
+	}
 	return fmt.Sprintf("https://%s/%s/%s", m.publicBaseURL, m.bucket, object)
 }
