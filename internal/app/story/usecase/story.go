@@ -220,7 +220,9 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	hasChoice := false
 	if len(currentSlide.Choices) > 0 {
 		if err := json.Unmarshal(currentSlide.Choices, &choices); err == nil {
-			hasChoice = true
+			if len(choices) > 0 {
+				hasChoice = true
+			}
 		}
 	}
 
