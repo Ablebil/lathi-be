@@ -89,7 +89,7 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 				Text string `json:"text"`
 			}
 
-			if err := json.Unmarshal(slide.Choices, &rawChoice); err != nil {
+			if err := json.Unmarshal(slide.Choices, &rawChoice); err == nil {
 				for i, rc := range rawChoice {
 					choicesResp = append(choicesResp, dto.ChoiceItemResponse{
 						Index: i,
@@ -99,10 +99,31 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 			}
 		}
 
+		var charsOnScreen []dto.CharacterOnScreen
+		if len(slide.Characters) > 0 {
+			var rawChars []struct {
+				Name     string `json:"name"`
+				ImageURL string `json:"image_url"`
+				IsActive bool   `json:"is_active"`
+			}
+
+			if err := json.Unmarshal(slide.Characters, &rawChars); err == nil {
+				for _, rc := range rawChars {
+					isActive := strings.EqualFold(rc.Name, slide.SpeakerName)
+
+					charsOnScreen = append(charsOnScreen, dto.CharacterOnScreen{
+						Name:     rc.Name,
+						ImageURL: uc.storage.GetObjectURL(rc.ImageURL),
+						IsActive: isActive,
+					})
+				}
+			}
+		}
+
 		slidesResp = append(slidesResp, dto.SlideItemResponse{
 			ID:                 slide.ID,
 			BackgroundImageURL: uc.storage.GetObjectURL(slide.BackgroundImageURL),
-			CharacterImageURL:  uc.storage.GetObjectURL(slide.CharacterImageURL),
+			Characters:         charsOnScreen,
 			AudioFileURL:       uc.storage.GetObjectURL(slide.AudioFileURL),
 			SpeakerName:        slide.SpeakerName,
 			Content:            slide.Content,
@@ -207,14 +228,12 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	})
 
 	var nextSlideID *uuid.UUID = currentSlide.NextSlideID
-	charExpression := "neutral"
 	moodImpact := 0
 
 	var choices []struct {
-		Text              string    `json:"text"`
-		NextSlideID       uuid.UUID `json:"next_slide_id"`
-		MoodImpact        int       `json:"mood_impact"`
-		CharacterReaction string    `json:"character_reaction"`
+		Text        string    `json:"text"`
+		NextSlideID uuid.UUID `json:"next_slide_id"`
+		MoodImpact  int       `json:"mood_impact"`
 	}
 
 	hasChoice := false
@@ -244,7 +263,6 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		selected := choices[idx]
 		nextSlideID = &selected.NextSlideID
 		moodImpact = selected.MoodImpact
-		charExpression = selected.CharacterReaction
 
 		history = append(history, dto.HistoryEntry{
 			Speaker:   "Andi",
@@ -308,27 +326,12 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		_ = uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
 	}
 
-	finalImageURL := ""
-	if currentSlide.CharacterImageURL != "" {
-		basePath := strings.TrimSuffix(currentSlide.CharacterImageURL, ".webp")
-		lastUnderscoreIndex := strings.LastIndex(basePath, "_")
-
-		if lastUnderscoreIndex != -1 {
-			baseName := basePath[:lastUnderscoreIndex]
-			finalImageURL = uc.storage.GetObjectURL(baseName + "_" + charExpression + ".webp")
-		} else {
-			finalImageURL = uc.storage.GetObjectURL(basePath + "_" + charExpression + ".webp")
-		}
-	}
-
 	return &dto.StoryActionResponse{
-		IsGameOver:        isGameOver,
-		IsCompleted:       isCompleted,
-		Message:           message,
-		RemainingHearts:   session.CurrentHearts,
-		CharacterReaction: charExpression,
-		CharacterImageURL: finalImageURL,
-		NextSlideID:       nextSlideID,
-		HistoryLog:        history,
+		IsGameOver:      isGameOver,
+		IsCompleted:     isCompleted,
+		Message:         message,
+		RemainingHearts: session.CurrentHearts,
+		NextSlideID:     nextSlideID,
+		HistoryLog:      history,
 	}, nil
 }

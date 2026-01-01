@@ -31,12 +31,12 @@ type Slide struct {
 	ID                 uuid.UUID   `json:"id" gorm:"type:char(36);primaryKey;not null"`
 	ChapterID          uuid.UUID   `json:"chapter_id" gorm:"type:char(36);not null"`
 	BackgroundImageURL string      `json:"background_image_url" gorm:"type:varchar(255);not null"`
-	CharacterImageURL  string      `json:"character_image_url" gorm:"type:varchar(255);not null"`
+	Characters         types.JSONB `json:"characters" gorm:"type:jsonb;default:'[]'::jsonb;not null"`
 	AudioFileURL       string      `json:"audio_file_url" gorm:"type:varchar(255);not null"`
 	SpeakerName        string      `json:"speaker_name" gorm:"type:varchar(100);not null"`
 	Content            string      `json:"content" gorm:"type:text;not null"`
 	NextSlideID        *uuid.UUID  `json:"next_slide_id" gorm:"type:char(36)"`
-	Choices            types.JSONB `json:"choices" gorm:"type:jsonb;default:'null'::jsonb"`
+	Choices            types.JSONB `json:"choices" gorm:"type:jsonb;default:'[]'::jsonb"`
 
 	Vocabularies []Dictionary `json:"vocabularies" gorm:"many2many:slide_vocabularies;constraint:OnDelete:CASCADE"`
 }

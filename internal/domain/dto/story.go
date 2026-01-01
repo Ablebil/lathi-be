@@ -19,6 +19,12 @@ type HistoryEntry struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+type CharacterOnScreen struct {
+	Name     string `json:"name"`
+	ImageURL string `json:"image_url"`
+	IsActive bool   `json:"is_active"`
+}
+
 type ChapterListReponse struct {
 	ID            uuid.UUID `json:"id"`
 	Title         string    `json:"title"`
@@ -37,7 +43,7 @@ type ChapterContentResponse struct {
 type SlideItemResponse struct {
 	ID                 uuid.UUID            `json:"id"`
 	BackgroundImageURL string               `json:"background_image_url"`
-	CharacterImageURL  string               `json:"character_image_url"`
+	Characters         []CharacterOnScreen  `json:"characters"`
 	AudioFileURL       string               `json:"audio_file_url"`
 	SpeakerName        string               `json:"speaker_name"`
 	Content            string               `json:"content"`
@@ -68,12 +74,10 @@ type UserSessionResponse struct {
 }
 
 type StoryActionResponse struct {
-	IsGameOver        bool           `json:"is_game_over"`
-	IsCompleted       bool           `json:"is_completed"`
-	Message           string         `json:"message"` // msg if gameover/completed
-	RemainingHearts   int            `json:"remaining_hearts"`
-	CharacterReaction string         `json:"character_reaction"` // happy, angry, neutral
-	CharacterImageURL string         `json:"character_image_url"`
-	NextSlideID       *uuid.UUID     `json:"next_slide_id"`
-	HistoryLog        []HistoryEntry `json:"history_log"`
+	IsGameOver      bool           `json:"is_game_over"`
+	IsCompleted     bool           `json:"is_completed"`
+	Message         string         `json:"message"` // msg if gameover/completed
+	RemainingHearts int            `json:"remaining_hearts"`
+	NextSlideID     *uuid.UUID     `json:"next_slide_id"`
+	HistoryLog      []HistoryEntry `json:"history_log"`
 }
