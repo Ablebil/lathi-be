@@ -210,19 +210,30 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	charExpression := "neutral"
 	moodImpact := 0
 
+	var choices []struct {
+		Text              string    `json:"text"`
+		NextSlideID       uuid.UUID `json:"next_slide_id"`
+		MoodImpact        int       `json:"mood_impact"`
+		CharacterReaction string    `json:"character_reaction"`
+	}
+
+	hasChoice := false
+	if len(currentSlide.Choices) > 0 {
+		if err := json.Unmarshal(currentSlide.Choices, &choices); err == nil {
+			hasChoice = true
+		}
+	}
+
+	if hasChoice && req.ChoiceIndex == nil {
+		return nil, response.ErrBadRequest("this slide requires a choice to be made")
+	}
+
+	if !hasChoice && req.ChoiceIndex != nil {
+		return nil, response.ErrBadRequest("this slide does not have choices")
+	}
+
 	// process choice if any
-	if req.ChoiceIndex != nil {
-		var choices []struct {
-			Text              string    `json:"text"`
-			NextSlideID       uuid.UUID `json:"next_slide_id"`
-			MoodImpact        int       `json:"mood_impact"`
-			CharacterReaction string    `json:"character_reaction"`
-		}
-
-		if err := json.Unmarshal(currentSlide.Choices, &choices); err != nil {
-			return nil, response.ErrInternal("failed to parse slide choices")
-		}
-
+	if req.ChoiceIndex != nil && hasChoice {
 		idx := *req.ChoiceIndex
 		if idx < 0 || idx >= len(choices) {
 			return nil, response.ErrBadRequest("invalid choice index")
@@ -258,6 +269,10 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		session.CurrentHearts = 0
 		isGameOver = true
 		message = fmt.Sprintf("%s kuciwo karo omonganmu. Coba maneh ya!", feedbackSpeaker)
+	}
+
+	if session.CurrentHearts > 3 {
+		session.CurrentHearts = 3
 	}
 
 	session.IsGameOver = isGameOver
