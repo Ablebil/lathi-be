@@ -15,11 +15,13 @@ type Dictionary struct {
 }
 
 func (d *Dictionary) BeforeCreate(tx *gorm.DB) error {
-	id, err := uuid.NewV7()
-	if err != nil {
-		return err
+	if d.ID == uuid.Nil {
+		id, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		d.ID = id
 	}
-	d.ID = id
 	return nil
 }
 

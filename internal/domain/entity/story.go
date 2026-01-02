@@ -19,11 +19,13 @@ type Chapter struct {
 }
 
 func (c *Chapter) BeforeCreate(tx *gorm.DB) error {
-	id, err := uuid.NewV7()
-	if err != nil {
-		return err
+	if c.ID == uuid.Nil {
+		id, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		c.ID = id
 	}
-	c.ID = id
 	return nil
 }
 
@@ -42,11 +44,13 @@ type Slide struct {
 }
 
 func (s *Slide) BeforeCreate(tx *gorm.DB) error {
-	id, err := uuid.NewV7()
-	if err != nil {
-		return err
+	if s.ID == uuid.Nil {
+		id, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		s.ID = id
 	}
-	s.ID = id
 	return nil
 }
 
