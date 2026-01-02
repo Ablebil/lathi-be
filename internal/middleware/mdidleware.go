@@ -6,14 +6,14 @@ import (
 )
 
 type middleware struct {
-	jwt jwt.JwtItf
+	jwt jwt.JWTItf
 }
 
 type MiddlewareItf interface {
 	Authenticate(ctx *fiber.Ctx) error
 }
 
-func NewMiddleware(jwt jwt.JwtItf) *middleware {
+func NewMiddleware(jwt jwt.JWTItf) *middleware {
 	return &middleware{
 		jwt: jwt,
 	}

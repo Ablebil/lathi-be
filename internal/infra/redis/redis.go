@@ -26,7 +26,7 @@ func New(env *config.Env) RedisItf {
 	client := r.NewClient(&r.Options{
 		Addr:     fmt.Sprintf("%s:%d", env.RedisHost, env.RedisPort),
 		Password: env.RedisPassword,
-		DB:       env.RedisDb,
+		DB:       env.RedisDB,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

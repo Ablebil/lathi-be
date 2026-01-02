@@ -34,10 +34,10 @@ func NewMail(env *config.Env) MailItf {
 
 		instance = &mail{
 			dialer: gomail.NewDialer(
-				env.SmtpHost,
-				env.SmtpPort,
-				env.SmtpUsername,
-				env.SmtpPassword,
+				env.SMTPHost,
+				env.SMTPPort,
+				env.SMTPUsername,
+				env.SMTPPassword,
 			),
 			template: tmpl,
 		}

@@ -31,7 +31,7 @@ func New(env *config.Env) (MinioItf, error) {
 	return &minio{
 		client:        client,
 		endpoint:      env.StorageEndpoint,
-		publicBaseURL: env.StoragePublicUrl,
+		publicBaseURL: env.StoragePublicURL,
 		bucket:        env.StorageBucket,
 	}, nil
 }

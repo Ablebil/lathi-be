@@ -23,11 +23,11 @@ type authUsecase struct {
 	bcrypt bcrypt.BcryptItf
 	mail   mail.MailItf
 	cache  redis.RedisItf
-	jwt    jwt.JwtItf
+	jwt    jwt.JWTItf
 	env    *config.Env
 }
 
-func NewAuthUsecase(userRepo contract.UserRepositoryItf, bcrypt bcrypt.BcryptItf, mail mail.MailItf, cache redis.RedisItf, jwt jwt.JwtItf, env *config.Env) contract.AuthUsecaseItf {
+func NewAuthUsecase(userRepo contract.UserRepositoryItf, bcrypt bcrypt.BcryptItf, mail mail.MailItf, cache redis.RedisItf, jwt jwt.JWTItf, env *config.Env) contract.AuthUsecaseItf {
 	return &authUsecase{
 		repo:   userRepo,
 		bcrypt: bcrypt,
@@ -67,21 +67,21 @@ func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *
 	// generate verif token
 	token := uuid.NewString()
 	cacheKey := fmt.Sprintf("verify:%s", token)
-	if err := uc.cache.Set(ctx, cacheKey, newUser.Email, uc.env.VerifTokenTtl); err != nil {
+	if err := uc.cache.Set(ctx, cacheKey, newUser.Email, uc.env.VerifTokenTTL); err != nil {
 		slog.Error("failed to store verification token", "error", err)
 		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
-	u, _ := url.Parse(uc.env.VerifUrl)
+	u, _ := url.Parse(uc.env.VerifURL)
 	q := u.Query()
 	q.Set("token", token)
 	u.RawQuery = q.Encode()
 
-	verifyUrl := u.String()
+	verifyURL := u.String()
 	mailData := map[string]any{
 		"Username":      newUser.Username,
-		"VerifyURL":     verifyUrl,
-		"ExpireMinutes": uc.env.VerifTokenTtl.Minutes(),
+		"VerifyURL":     verifyURL,
+		"ExpireMinutes": uc.env.VerifTokenTTL.Minutes(),
 	}
 	if err := uc.mail.Send(newUser.Email, "Verifikasi Email", "verification.html", mailData); err != nil {
 		slog.Error("failed to send verification email", "error", err)
@@ -133,20 +133,20 @@ func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.T
 		return nil, response.ErrUnauthorized("Akunmu belum terverifikasi, cek email kamu ya")
 	}
 
-	accessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
+	accessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTTL)
 	if err != nil {
 		slog.Error("failed to create access token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
-	refreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
+	refreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTTL)
 	if err != nil {
 		slog.Error("failed to create refresh token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
-	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
+	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTTL); err != nil {
 		slog.Error("failed to store refresh token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
@@ -169,13 +169,13 @@ func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*d
 		return nil, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya")
 	}
 
-	newAccessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
+	newAccessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTTL)
 	if err != nil {
 		slog.Error("failed to create access token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
-	newRefreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
+	newRefreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTTL)
 	if err != nil {
 		slog.Error("failed to create refresh token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
@@ -183,7 +183,7 @@ func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*d
 
 	_ = uc.cache.Del(ctx, cacheKey)
 	newCacheKey := fmt.Sprintf("refresh:%s", newRefreshToken)
-	if err := uc.cache.Set(ctx, newCacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
+	if err := uc.cache.Set(ctx, newCacheKey, user.ID.String(), uc.env.RefreshTTL); err != nil {
 		slog.Error("failed to store refresh token", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}

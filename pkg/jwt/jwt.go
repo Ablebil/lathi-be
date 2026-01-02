@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type JwtItf interface {
+type JWTItf interface {
 	CreateAccessToken(userID uuid.UUID, username, email string, exp time.Duration) (string, error)
 	CreateRefreshToken(userID uuid.UUID, exp time.Duration) (string, error)
 	ParseAccessToken(tokenStr string) (*AccessClaims, error)
@@ -29,7 +29,7 @@ type jwt struct {
 	refreshSecret []byte
 }
 
-func NewJwt(env *config.Env) JwtItf {
+func NewJWT(env *config.Env) JWTItf {
 	return &jwt{
 		accessSecret:  []byte(env.AccessSecret),
 		refreshSecret: []byte(env.RefreshSecret),

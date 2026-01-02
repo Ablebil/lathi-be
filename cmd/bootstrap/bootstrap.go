@@ -55,7 +55,7 @@ func Start() error {
 	val := validator.NewValidator()
 	bcrypt := bcrypt.NewBcrypt()
 	mail := mail.NewMail(env)
-	jwt := jwt.NewJwt(env)
+	jwt := jwt.NewJWT(env)
 	mw := middleware.NewMiddleware(jwt)
 
 	// auth module

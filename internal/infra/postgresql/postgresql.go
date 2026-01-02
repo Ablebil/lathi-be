@@ -12,7 +12,7 @@ import (
 
 func New(env *config.Env) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s",
-		env.DbHost, env.DbUser, env.DbPassword, env.DbName, env.DbPort, env.DbSSLMode)
+		env.DBHost, env.DBUser, env.DBPassword, env.DBName, env.DBPort, env.DBSSLMode)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		PrepareStmt: true,

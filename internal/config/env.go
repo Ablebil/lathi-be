@@ -11,29 +11,29 @@ type Env struct {
 	AppEnv           string        `mapstructure:"APP_ENV"`
 	AppHost          string        `mapstructure:"APP_HOST"`
 	AppPort          int           `mapstructure:"APP_PORT"`
-	DbHost           string        `mapstructure:"DB_HOST"`
-	DbPort           int           `mapstructure:"DB_PORT"`
-	DbName           string        `mapstructure:"DB_NAME"`
-	DbUser           string        `mapstructure:"DB_USER"`
-	DbPassword       string        `mapstructure:"DB_PASSWORD"`
-	DbSSLMode        string        `mapstructure:"DB_SSLMODE"`
+	DBHost           string        `mapstructure:"DB_HOST"`
+	DBPort           int           `mapstructure:"DB_PORT"`
+	DBName           string        `mapstructure:"DB_NAME"`
+	DBUser           string        `mapstructure:"DB_USER"`
+	DBPassword       string        `mapstructure:"DB_PASSWORD"`
+	DBSSLMode        string        `mapstructure:"DB_SSLMODE"`
 	RedisHost        string        `mapstructure:"REDIS_HOST"`
 	RedisPort        int           `mapstructure:"REDIS_PORT"`
 	RedisPassword    string        `mapstructure:"REDIS_PASSWORD"`
-	RedisDb          int           `mapstructure:"REDIS_DB"`
+	RedisDB          int           `mapstructure:"REDIS_DB"`
 	AccessSecret     string        `mapstructure:"ACCESS_SECRET"`
 	RefreshSecret    string        `mapstructure:"REFRESH_SECRET"`
-	AccessTtl        time.Duration `mapstructure:"ACCESS_TTL"`
-	RefreshTtl       time.Duration `mapstructure:"REFRESH_TTL"`
-	SmtpHost         string        `mapstructure:"SMTP_HOST"`
-	SmtpPort         int           `mapstructure:"SMTP_PORT"`
-	SmtpUsername     string        `mapstructure:"SMTP_USERNAME"`
-	SmtpPassword     string        `mapstructure:"SMTP_PASSWORD"`
-	VerifUrl         string        `mapstructure:"VERIF_URL"`
-	VerifTokenTtl    time.Duration `mapstructure:"VERIF_TOKEN_TTL"`
-	FeUrl            string        `mapstructure:"FE_URL"`
+	AccessTTL        time.Duration `mapstructure:"ACCESS_TTL"`
+	RefreshTTL       time.Duration `mapstructure:"REFRESH_TTL"`
+	SMTPHost         string        `mapstructure:"SMTP_HOST"`
+	SMTPPort         int           `mapstructure:"SMTP_PORT"`
+	SMTPUsername     string        `mapstructure:"SMTP_USERNAME"`
+	SMTPPassword     string        `mapstructure:"SMTP_PASSWORD"`
+	VerifURL         string        `mapstructure:"VERIF_URL"`
+	VerifTokenTTL    time.Duration `mapstructure:"VERIF_TOKEN_TTL"`
+	FEURL            string        `mapstructure:"FE_URL"`
 	StorageEndpoint  string        `mapstructure:"STORAGE_ENDPOINT"`
-	StoragePublicUrl string        `mapstructure:"STORAGE_PUBLIC_URL"`
+	StoragePublicURL string        `mapstructure:"STORAGE_PUBLIC_URL"`
 	StorageAccessKey string        `mapstructure:"STORAGE_ACCESS_KEY"`
 	StorageSecretKey string        `mapstructure:"STORAGE_SECRET_KEY"`
 	StorageBucket    string        `mapstructure:"STORAGE_BUCKET"`

@@ -45,7 +45,7 @@ func New(env *config.Env) *fiber.App {
 	app.Use(healthcheck.New())
 	app.Use(compress.New(compress.Config{Level: compress.LevelBestSpeed}))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: env.FeUrl,
+		AllowOrigins: env.FEURL,
 		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowHeaders: "Content-Type, Authorization",
 	}))
