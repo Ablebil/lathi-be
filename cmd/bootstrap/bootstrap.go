@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Ablebil/lathi-be/db/migration"
+	"github.com/Ablebil/lathi-be/db/seed"
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
@@ -72,8 +73,10 @@ func Start() error {
 
 func handleArgs(env *config.Env) {
 	migrateCmd := flag.NewFlagSet("migrate", flag.ExitOnError)
+	seedCmd := flag.NewFlagSet("seed", flag.ExitOnError)
 
 	migrateAction := migrateCmd.String("action", "", "specify 'up' or 'down' for migration")
+	seedDomain := seedCmd.String("domain", "", "specify a domain for seeding (optional)")
 
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
@@ -87,6 +90,13 @@ func handleArgs(env *config.Env) {
 			}
 
 			migration.Migrate(env, *migrateAction)
+			os.Exit(1)
+		case "seed":
+			if err := seedCmd.Parse(os.Args[2:]); err != nil {
+				slog.Error("unable to parse seed command", "error", err)
+			}
+
+			seed.Seed(env, *seedDomain)
 			os.Exit(1)
 		}
 	}
