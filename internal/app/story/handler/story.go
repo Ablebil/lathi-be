@@ -32,7 +32,7 @@ func NewStoryHandler(router fiber.Router, validator validator.ValidatorItf, mw m
 func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
-		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
@@ -41,13 +41,13 @@ func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "chapter list retrieved successfully", resp)
+	return response.Success(ctx, fiber.StatusOK, "Daftar chapter berhasil dimuat", resp)
 }
 
 func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
-		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
@@ -62,13 +62,13 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "chapter content retrieved successfully", resp)
+	return response.Success(ctx, fiber.StatusOK, "Konten chapter berhasil dimuat", resp)
 }
 
 func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
-		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
@@ -83,13 +83,13 @@ func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "user session retrieved successfully", resp)
+	return response.Success(ctx, fiber.StatusOK, "Prorgesmu berhasil dipulihkan", resp)
 }
 
 func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
-		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
@@ -103,19 +103,19 @@ func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "session started successfully", nil)
+	return response.Success(ctx, fiber.StatusOK, "Permainan dimulai, semangat ya!", nil)
 }
 
 func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
-		return response.Error(ctx, response.ErrUnauthorized("invalid user session"), nil)
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
 	req := new(dto.StoryActionRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -127,5 +127,5 @@ func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "action submitted", resp)
+	return response.Success(ctx, fiber.StatusOK, "Aksimu berhasil diproses!", resp)
 }

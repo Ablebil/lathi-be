@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -34,12 +35,14 @@ func NewStoryUsecase(storyRepo contract.StoryRepositoryItf, storage minio.MinioI
 func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([]dto.ChapterListReponse, *response.APIError) {
 	chapters, err := uc.repo.GetAllChapters(ctx)
 	if err != nil {
-		return nil, response.ErrInternal("failed to get chapters")
+		slog.Error("failed to get chapters", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	lastCompletedOrder, err := uc.repo.GetUserLastCompletedChapter(ctx, userID)
 	if err != nil {
-		return nil, response.ErrInternal("failed to get user progress")
+		slog.Error("failed to get user progress", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	var resp []dto.ChapterListReponse
@@ -64,10 +67,11 @@ func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([
 func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) (*dto.ChapterContentResponse, *response.APIError) {
 	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
 	if err != nil {
-		return nil, response.ErrInternal("failed to get chapter")
+		slog.Error("failed to get chapter", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if chapter == nil {
-		return nil, response.ErrNotFound("chapter not found")
+		return nil, response.ErrNotFound("Chapter ini ga ketemu")
 	}
 
 	var slidesResp []dto.SlideItemResponse
@@ -142,7 +146,8 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uuid.UUID) (*dto.UserSessionResponse, *response.APIError) {
 	session, err := uc.repo.FindSession(ctx, userID, chapterID)
 	if err != nil {
-		return nil, response.ErrInternal("failed to fetch session")
+		slog.Error("failed to get session", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if session == nil {
 		return nil, nil // user hasn't played this chapter yet
@@ -166,13 +171,14 @@ func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uu
 func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) *response.APIError {
 	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
 	if err != nil {
-		return response.ErrInternal("failed to fetch chapter info")
+		slog.Error("failed to get chapter info", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if chapter == nil {
-		return response.ErrNotFound("chapter not found")
+		return response.ErrNotFound("Chapter ini ga ketemu")
 	}
 	if len(chapter.Slides) == 0 {
-		return response.ErrInternal("chapter has no slides")
+		return response.ErrInternal("Chapter ini belum punya konten")
 	}
 
 	session := &entity.UserStorySession{
@@ -186,7 +192,8 @@ func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chap
 	}
 
 	if err := uc.repo.CreateSession(ctx, session); err != nil {
-		return response.ErrInternal("failed to starts")
+		slog.Error("failed to create session", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	return nil
@@ -195,18 +202,19 @@ func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chap
 func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req *dto.StoryActionRequest) (*dto.StoryActionResponse, *response.APIError) {
 	session, err := uc.repo.FindSession(ctx, userID, req.ChapterID)
 	if err != nil {
-		return nil, response.ErrInternal("failed to find session")
+		slog.Error("failed to get session", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if session == nil {
-		return nil, response.ErrBadRequest("session not found, please start session first")
+		return nil, response.ErrBadRequest("Kamu belum memulai chapter ini, yuk mulai dulu ya!")
 	}
 	if session.IsGameOver || session.IsCompleted {
-		return nil, response.ErrBadRequest("session already ended")
+		return nil, response.ErrBadRequest("Permainan udah selesai, coba mulai lagi ya!")
 	}
 
 	currentSlide, err := uc.repo.GetSlideByID(ctx, req.SlideID)
 	if err != nil || currentSlide == nil {
-		return nil, response.ErrNotFound("slide not found")
+		return nil, response.ErrNotFound("Slide ga ketemu")
 	}
 
 	// append to history log
@@ -246,18 +254,18 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 	}
 
 	if hasChoice && req.ChoiceIndex == nil {
-		return nil, response.ErrBadRequest("this slide requires a choice to be made")
+		return nil, response.ErrBadRequest("Kamu harus milih salah satu pilihan yang ada")
 	}
 
 	if !hasChoice && req.ChoiceIndex != nil {
-		return nil, response.ErrBadRequest("this slide does not have choices")
+		return nil, response.ErrBadRequest("Slide ini ga punya pilihan buat dipilih")
 	}
 
 	// process choice if any
 	if req.ChoiceIndex != nil && hasChoice {
 		idx := *req.ChoiceIndex
 		if idx < 0 || idx >= len(choices) {
-			return nil, response.ErrBadRequest("invalid choice index")
+			return nil, response.ErrBadRequest("Pilihanmu ga valid")
 		}
 
 		selected := choices[idx]
@@ -314,7 +322,8 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 
 	session.UpdatedAt = time.Now()
 	if err := uc.repo.UpdateSession(ctx, session); err != nil {
-		return nil, response.ErrInternal("failed to save progress")
+		slog.Error("failed to update session", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	// unlock vocabs if any

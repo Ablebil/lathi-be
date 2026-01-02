@@ -28,7 +28,7 @@ func NewValidationError(err error) *APIError {
 	}
 	return &APIError{
 		Type:    "validation_error",
-		Message: "Validation failed",
+		Message: "Ups, ada data yang ga sesuai nih",
 		Status:  422,
 		Fields:  fields,
 	}
@@ -37,7 +37,7 @@ func NewValidationError(err error) *APIError {
 func NewParamValidationError(field, issue string) *APIError {
 	return &APIError{
 		Type:    "validation_error",
-		Message: "Validation failed",
+		Message: "Ups, ada data yang ga sesuai nih",
 		Status:  400,
 		Fields: map[string]string{
 			field: issue,
@@ -47,17 +47,17 @@ func NewParamValidationError(field, issue string) *APIError {
 
 // error helpers
 func ErrInternal(detail string) *APIError {
-	return NewAPIError(500, "internal_error", "Internal server error", detail)
+	return NewAPIError(500, "internal_error", "Coba lagi nanti ya!", detail)
 }
 func ErrNotFound(detail string) *APIError {
-	return NewAPIError(404, "not_found", "Resource not found", detail)
+	return NewAPIError(404, "not_found", "Data ga ditemukan", detail)
 }
 func ErrUnauthorized(detail string) *APIError {
-	return NewAPIError(401, "unauthorized", "Unauthorized", detail)
+	return NewAPIError(401, "unauthorized", "Kamu belum login, yuk login dulu", detail)
 }
 func ErrBadRequest(detail string) *APIError {
-	return NewAPIError(400, "bad_request", "Bad request", detail)
+	return NewAPIError(400, "bad_request", "Data yang dikirimkan salah", detail)
 }
 func ErrConflict(detail string) *APIError {
-	return NewAPIError(409, "conflict", "Conflict", detail)
+	return NewAPIError(409, "conflict", "Data udah ada sebelumnya", detail)
 }

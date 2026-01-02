@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/url"
 
 	"github.com/Ablebil/lathi-be/internal/config"
@@ -40,15 +41,17 @@ func NewAuthUsecase(userRepo contract.UserRepositoryItf, bcrypt bcrypt.BcryptItf
 func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *response.APIError {
 	user, err := uc.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		return response.ErrInternal("failed to find user")
+		slog.Error("failed to get user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if user != nil {
-		return response.ErrConflict("email already registered")
+		return response.ErrConflict("Email ini udah pernah didaftarin, coba email lain ya")
 	}
 
 	hashed, err := uc.bcrypt.Hash(req.Password)
 	if err != nil {
-		return response.ErrInternal("failed to hash password")
+		slog.Error("failed to hash password", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	newUser := &entity.User{
@@ -57,14 +60,16 @@ func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *
 		Password: hashed,
 	}
 	if err := uc.repo.CreateUser(ctx, newUser); err != nil {
-		return response.ErrInternal("failed to create user")
+		slog.Error("failed to create user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	// generate verif token
 	token := uuid.NewString()
 	cacheKey := fmt.Sprintf("verify:%s", token)
 	if err := uc.cache.Set(ctx, cacheKey, newUser.Email, uc.env.VerifTokenTtl); err != nil {
-		return response.ErrInternal("failed to store verification token")
+		slog.Error("failed to store verification token", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	u, _ := url.Parse(uc.env.VerifUrl)
@@ -79,7 +84,8 @@ func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *
 		"ExpireMinutes": uc.env.VerifTokenTtl.Minutes(),
 	}
 	if err := uc.mail.Send(newUser.Email, "Verifikasi Email", "verification.html", mailData); err != nil {
-		return response.ErrInternal("failed to send verification email")
+		slog.Error("failed to send verification email", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	return nil
@@ -89,23 +95,25 @@ func (uc *authUsecase) Verify(ctx context.Context, req *dto.VerifyRequest) *resp
 	cacheKey := fmt.Sprintf("verify:%s", req.Token)
 	var email string
 	if err := uc.cache.Get(ctx, cacheKey, &email); err != nil {
-		return response.ErrBadRequest("invalid or expired token")
+		return response.ErrBadRequest("Token verifikasi ga valid atau udah kadaluarsa, coba daftar lagi ya")
 	}
 
 	user, err := uc.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return response.ErrNotFound("failed to find user")
+		slog.Error("failed to get user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if user == nil {
-		return response.ErrNotFound("user not found")
+		return response.ErrNotFound("Akun ga ditemukan, coba daftar dulu ya")
 	}
 	if user.IsVerified {
-		return response.ErrBadRequest("user already verified")
+		return response.ErrBadRequest("Akunmu udah terverifikasi sebelumnya")
 	}
 
 	user.IsVerified = true
 	if err := uc.repo.UpdateUser(ctx, user); err != nil {
-		return response.ErrInternal("failed to update user verification")
+		slog.Error("failed to update user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	_ = uc.cache.Del(ctx, cacheKey)
@@ -115,28 +123,32 @@ func (uc *authUsecase) Verify(ctx context.Context, req *dto.VerifyRequest) *resp
 func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.TokenResponse, *response.APIError) {
 	user, err := uc.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, response.ErrInternal("failed to find user")
+		slog.Error("failed to get user", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 	if user == nil || !uc.bcrypt.Compare(req.Password, user.Password) {
-		return nil, response.ErrUnauthorized("invalid email or password")
+		return nil, response.ErrUnauthorized("Email atau password kamu salah")
 	}
 	if !user.IsVerified {
-		return nil, response.ErrUnauthorized("email not verified")
+		return nil, response.ErrUnauthorized("Akunmu belum terverifikasi, cek email kamu ya")
 	}
 
 	accessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
 	if err != nil {
-		return nil, response.ErrInternal("failed to create access token")
+		slog.Error("failed to create access token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	refreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
 	if err != nil {
-		return nil, response.ErrInternal("failed to create refresh token")
+		slog.Error("failed to create refresh token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
 	if err := uc.cache.Set(ctx, cacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
-		return nil, response.ErrInternal("failed to store refresh token")
+		slog.Error("failed to store refresh token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	return &dto.TokenResponse{
@@ -149,28 +161,31 @@ func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*d
 	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
 	var userID string
 	if err := uc.cache.Get(ctx, cacheKey, &userID); err != nil {
-		return nil, response.ErrUnauthorized("invalid or expired refresh token")
+		return nil, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya")
 	}
 
 	user, err := uc.repo.GetUserByID(ctx, uuid.MustParse(userID))
 	if err != nil || user == nil {
-		return nil, response.ErrUnauthorized("invalid refresh or expired refresh token")
+		return nil, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya")
 	}
 
 	newAccessToken, err := uc.jwt.CreateAccessToken(user.ID, user.Username, user.Email, uc.env.AccessTtl)
 	if err != nil {
-		return nil, response.ErrInternal("failed to create access token")
+		slog.Error("failed to create access token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	newRefreshToken, err := uc.jwt.CreateRefreshToken(user.ID, uc.env.RefreshTtl)
 	if err != nil {
-		return nil, response.ErrInternal("failed to create refresh token")
+		slog.Error("failed to create refresh token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	_ = uc.cache.Del(ctx, cacheKey)
 	newCacheKey := fmt.Sprintf("refresh:%s", newRefreshToken)
 	if err := uc.cache.Set(ctx, newCacheKey, user.ID.String(), uc.env.RefreshTtl); err != nil {
-		return nil, response.ErrInternal("failed to store refresh token")
+		slog.Error("failed to store refresh token", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	return &dto.TokenResponse{
@@ -182,7 +197,8 @@ func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*d
 func (uc *authUsecase) Logout(ctx context.Context, req *dto.LogoutRequest) *response.APIError {
 	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
 	if err := uc.cache.Del(ctx, cacheKey); err != nil {
-		return response.ErrInternal("failed to delete refresh token")
+		slog.Error("failed to delete refresh token", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
 	}
 
 	return nil

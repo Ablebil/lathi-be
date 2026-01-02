@@ -30,7 +30,7 @@ func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, authU
 func (h *authHandler) register(ctx *fiber.Ctx) error {
 	req := new(dto.RegisterRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -41,13 +41,13 @@ func (h *authHandler) register(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusCreated, "registration successful, please check your email for verification", nil)
+	return response.Success(ctx, fiber.StatusCreated, "Pendaftaran berhasil, cek email kamu buat verifikasi, ya", nil)
 }
 
 func (h *authHandler) verify(ctx *fiber.Ctx) error {
 	req := new(dto.VerifyRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -58,13 +58,13 @@ func (h *authHandler) verify(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "email verification successful", nil)
+	return response.Success(ctx, fiber.StatusOK, "Email kamu udah diverifikasi, yuk login sekarang!", nil)
 }
 
 func (h *authHandler) login(ctx *fiber.Ctx) error {
 	req := new(dto.LoginRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed to parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -76,13 +76,13 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "login successful", resp)
+	return response.Success(ctx, fiber.StatusOK, "Login sukses! Yuk mulai eksplorasi!", resp)
 }
 
 func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 	req := new(dto.RefreshRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed to parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -94,13 +94,13 @@ func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "refresh tokens successful", resp)
+	return response.Success(ctx, fiber.StatusOK, "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!", resp)
 }
 
 func (h *authHandler) logout(ctx *fiber.Ctx) error {
 	req := new(dto.LogoutRequest)
 	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("failed to parsing request body"), err)
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
 	if err := h.val.ValidateStruct(req); err != nil {
@@ -111,5 +111,5 @@ func (h *authHandler) logout(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "logout successful", nil)
+	return response.Success(ctx, fiber.StatusOK, "Logout berhasil, sampai jumpa lagi!", nil)
 }
