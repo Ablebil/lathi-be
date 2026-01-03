@@ -1,0 +1,1502 @@
+openapi: 3.1.0
+info:
+  title: Lathi API
+  version: "1.0.0"
+  description: API Documentation for Lathi - Javanese Visual Novel Learning Platform
+
+servers:
+  - url: "http://localhost:8080/api/v1"
+    description: Local development server
+  - url: "https://lathi.bccdev.id/api/v1"
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "success"
+        data:
+          oneOf:
+            - type: object
+            - type: "null"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - type
+            - message
+            - status
+          properties:
+            type:
+              type: string
+            message:
+              type: string
+            detail:
+              type: string
+            status:
+              type: integer
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+
+    # auth schemas
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: "andi"
+        email:
+          type: string
+          format: email
+          example: "andi@lathi.id"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 255
+          example: "Str0ngP@ssw0rD"
+
+    VerifyRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "andi@lathi.id"
+        password:
+          type: string
+          example: "Str0ngP@ssw0rD"
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsIn..."
+
+    LogoutRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsIn..."
+
+    TokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    # story schemas
+    StoryActionRequest:
+      type: object
+      required:
+        - chapter_id
+        - slide_id
+      properties:
+        chapter_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        slide_id:
+          type: string
+          format: uuid
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        choice_index:
+          oneOf:
+            - type: integer
+            - type: "null"
+          example: 0
+
+    HistoryEntry:
+      type: object
+      properties:
+        speaker:
+          type: string
+          example: "Andi"
+        text:
+          type: string
+          example: "Sugeng siang, Bu."
+        is_user:
+          type: boolean
+          example: false
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    CharacterOnScreen:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Andi"
+        image_url:
+          type: string
+          example: "https://storage.lathi.id/chars/andi_happy.webp"
+        is_active:
+          type: boolean
+          example: true
+
+    ChapterListResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          example: "Warung Mie Andi"
+        description:
+          type: string
+          example: "Andi ketemu Sekar neng warung, lan ngerti yen kudu ketemu Bapake."
+        cover_image_url:
+          type: string
+          example: "https://storage.lathi.id/chapters/ch1_cover.webp"
+        order_index:
+          type: integer
+          example: 1
+        is_locked:
+          type: boolean
+          example: false
+        is_completed:
+          type: boolean
+          example: false
+
+    VocabItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        word_krama:
+          type: string
+          example: "sowan"
+        word_ngoko:
+          type: string
+          example: "teka/mertamu"
+        word_indo:
+          type: string
+          example: "berkunjung (hormat)"
+
+    ChoiceItemResponse:
+      type: object
+      properties:
+        index:
+          type: integer
+          example: 0
+        text:
+          type: string
+          example: "Sugeng siang, Pak."
+
+    SlideItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        background_image_url:
+          type: string
+          example: "https://storage.lathi.id/bg/warmindo.webp"
+        characters:
+          type: array
+          items:
+            $ref: "#/components/schemas/CharacterOnScreen"
+        audio_file_url:
+          type: string
+          example: "https://storage.lathi.id/audio/slide_001.mp3"
+        speaker_name:
+          type: string
+          example: "Narator"
+        content:
+          type: string
+          example: "Wanci sonten ing kutha Surabaya..."
+        next_slide_id:
+          oneOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        vocabularies:
+          type: array
+          items:
+            $ref: "#/components/schemas/VocabItemResponse"
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChoiceItemResponse"
+
+    ChapterContentResponse:
+      type: object
+      properties:
+        chapter_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        slides:
+          type: array
+          items:
+            $ref: "#/components/schemas/SlideItemResponse"
+
+    UserSessionResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        current_slide_id:
+          type: string
+          format: uuid
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        current_hearts:
+          type: integer
+          example: 3
+        is_game_over:
+          type: boolean
+          example: false
+        is_completed:
+          type: boolean
+          example: false
+        history_log:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoryEntry"
+
+    StoryActionResponse:
+      type: object
+      properties:
+        is_game_over:
+          type: boolean
+          example: false
+        is_completed:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: ""
+        remaining_hearts:
+          type: integer
+          example: 3
+        next_slide_id:
+          oneOf:
+            - type: string
+              format: uuid
+            - type: "null"
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        history_log:
+          type: array
+          items:
+            $ref: "#/components/schemas/HistoryEntry"
+
+  responses:
+    # /auth/register errors
+    ErrRegisterBadRequest:
+      description: Bad request - Failed to parse request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+              status: 400
+
+    ErrRegisterValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                username: "required"
+                email: "email"
+                password: "min"
+
+    ErrRegisterConflict:
+      description: Conflict - Email already registered
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "conflict"
+              message: "Data udah ada sebelumnya"
+              detail: "Email ini udah pernah didaftarin, coba email lain ya"
+              status: 409
+
+    ErrRegisterInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /auth/verify errors
+    ErrVerifyBadRequest:
+      description: Bad request - Multiple scenarios (parse error, invalid/expired token, already verified)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            parseError:
+              summary: Failed to parse request body
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+                  status: 400
+            invalidToken:
+              summary: Invalid or expired verification token
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Token verifikasi ga valid atau udah kadaluarsa, coba daftar lagi ya"
+                  status: 400
+            alreadyVerified:
+              summary: Account already verified
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Akunmu udah terverifikasi sebelumnya"
+                  status: 400
+
+    ErrVerifyValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                token: "required"
+
+    ErrVerifyNotFound:
+      description: Not found - Account not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Akun ga ditemukan, coba daftar dulu ya"
+              status: 404
+
+    ErrVerifyInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /auth/login errors
+    ErrLoginBadRequest:
+      description: Bad request - Failed to parse request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+              status: 400
+
+    ErrLoginValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                email: "required"
+                password: "min"
+
+    ErrLoginUnauthorized:
+      description: Unauthorized - Multiple scenarios (wrong credentials, not verified)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            wrongCredentials:
+              summary: Wrong email or password
+              value:
+                success: false
+                error:
+                  type: "unauthorized"
+                  message: "Kamu belum login, yuk login dulu"
+                  detail: "Email atau password kamu salah"
+                  status: 401
+            notVerified:
+              summary: Account not verified yet
+              value:
+                success: false
+                error:
+                  type: "unauthorized"
+                  message: "Kamu belum login, yuk login dulu"
+                  detail: "Akunmu belum terverifikasi, cek email kamu ya"
+                  status: 401
+
+    ErrLoginInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /auth/refresh errors
+    ErrRefreshBadRequest:
+      description: Bad request - Failed to parse request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+              status: 400
+
+    ErrRefreshValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                refresh_token: "required"
+
+    ErrRefreshUnauthorized:
+      description: Unauthorized - Multiple scenarios (invalid/expired token, user not found)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            invalidToken:
+              summary: Invalid or expired refresh token
+              value:
+                success: false
+                error:
+                  type: "unauthorized"
+                  message: "Kamu belum login, yuk login dulu"
+                  detail: "Sesi kamu udah habis, coba login lagi ya"
+                  status: 401
+            userNotFound:
+              summary: User not found
+              value:
+                success: false
+                error:
+                  type: "unauthorized"
+                  message: "Kamu belum login, yuk login dulu"
+                  detail: "Sesi kamu udah habis, coba login lagi ya"
+                  status: 401
+
+    ErrRefreshInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /auth/logout errors
+    ErrLogoutBadRequest:
+      description: Bad request - Failed to parse request body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+              status: 400
+
+    ErrLogoutValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                refresh_token: "required"
+
+    ErrLogoutInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /stories/chapters errors
+    ErrChaptersUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrChaptersInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /stories/chapters/:id/content errors
+    ErrChapterContentBadRequest:
+      description: Bad request - Invalid chapter ID parameter
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Parameter 'id' harus berupa UUID yang valid"
+              status: 400
+
+    ErrChapterContentUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrChapterContentNotFound:
+      description: Not found - Chapter not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Chapter ini ga ketemu"
+              status: 404
+
+    ErrChapterContentInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /stories/chapters/:id/session errors
+    ErrSessionBadRequest:
+      description: Bad request - Invalid chapter ID parameter
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Parameter 'id' harus berupa UUID yang valid"
+              status: 400
+
+    ErrSessionUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrSessionInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # /stories/chapters/:id/start errors
+    ErrStartSessionBadRequest:
+      description: Bad request - Invalid chapter ID parameter
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "bad_request"
+              message: "Data yang dikirimkan salah"
+              detail: "Parameter 'id' harus berupa UUID yang valid"
+              status: 400
+
+    ErrStartSessionUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrStartSessionNotFound:
+      description: Not found - Chapter not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Chapter ini ga ketemu"
+              status: 404
+
+    ErrStartSessionInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            generalError:
+              summary: General internal error
+              value:
+                success: false
+                error:
+                  type: "internal_error"
+                  message: "Coba lagi nanti ya!"
+                  detail: "Coba lagi nanti ya!"
+                  status: 500
+            noContent:
+              summary: Chapter has no content/slides
+              value:
+                success: false
+                error:
+                  type: "internal_error"
+                  message: "Coba lagi nanti ya!"
+                  detail: "Chapter ini belum punya konten"
+                  status: 500
+
+    # /stories/action errors
+    ErrActionBadRequest:
+      description: Bad request - Multiple scenarios (parse error, validation errors, session errors)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            parseError:
+              summary: Failed to parse request body
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+                  status: 400
+            sessionNotStarted:
+              summary: Session not started yet
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Kamu belum memulai chapter ini, yuk mulai dulu ya!"
+                  status: 400
+            sessionEnded:
+              summary: Session already ended (game over or completed)
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Permainan udah selesai, coba mulai lagi ya!"
+                  status: 400
+            choiceRequired:
+              summary: Choice is required but not provided
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Kamu harus milih salah satu pilihan yang ada"
+                  status: 400
+            noChoiceAvailable:
+              summary: Choice provided but slide has no choices
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Slide ini ga punya pilihan buat dipilih"
+                  status: 400
+            invalidChoice:
+              summary: Invalid choice index
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Pilihanmu ga valid"
+                  status: 400
+
+    ErrActionValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                chapter_id: "required"
+                slide_id: "uuid"
+
+    ErrActionUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrActionNotFound:
+      description: Not found - Slide not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Slide ga ketemu"
+              status: 404
+
+    ErrActionInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Story
+    description: Story and chapter management endpoints
+
+paths:
+  # auth endpoints
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register New User
+      description: Register a new user account. A verification email will be sent to the provided email address.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Created - Registration successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Pendaftaran berhasil, cek email kamu buat verifikasi, ya"
+                      data:
+                        type: "null"
+                        example: null
+        "400":
+          $ref: "#/components/responses/ErrRegisterBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrRegisterValidation"
+        "409":
+          $ref: "#/components/responses/ErrRegisterConflict"
+        "500":
+          $ref: "#/components/responses/ErrRegisterInternal"
+
+  /auth/verify:
+    post:
+      tags:
+        - Auth
+      summary: Verify Email
+      description: Verify user email address using verification token sent via email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: OK - Email verification successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Email kamu udah diverifikasi, yuk login sekarang!"
+                      data:
+                        type: "null"
+                        example: null
+        "400":
+          $ref: "#/components/responses/ErrVerifyBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrVerifyValidation"
+        "404":
+          $ref: "#/components/responses/ErrVerifyNotFound"
+        "500":
+          $ref: "#/components/responses/ErrVerifyInternal"
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login User
+      description: Authenticate user and receive access and refresh tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK - Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Login sukses! Yuk mulai eksplorasi!"
+                      data:
+                        $ref: "#/components/schemas/TokenResponse"
+        "400":
+          $ref: "#/components/responses/ErrLoginBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrLoginValidation"
+        "401":
+          $ref: "#/components/responses/ErrLoginUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrLoginInternal"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh Access Token
+      description: Refresh expired access token using refresh token. Returns new access and refresh tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: OK - Token refresh successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!"
+                      data:
+                        $ref: "#/components/schemas/TokenResponse"
+        "400":
+          $ref: "#/components/responses/ErrRefreshBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrRefreshValidation"
+        "401":
+          $ref: "#/components/responses/ErrRefreshUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrRefreshInternal"
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout User
+      description: Logout user by invalidating the refresh token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoutRequest"
+      responses:
+        "200":
+          description: OK - Logout successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Logout berhasil, sampai jumpa lagi!"
+                      data:
+                        type: "null"
+                        example: null
+        "400":
+          $ref: "#/components/responses/ErrLogoutBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrLogoutValidation"
+        "500":
+          $ref: "#/components/responses/ErrLogoutInternal"
+
+  # story endpoints
+  /stories/chapters:
+    get:
+      tags:
+        - Story
+      summary: Get Chapter List
+      description: Get list of all available chapters with user progress (locked/completed status).
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK - Chapter list retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Daftar chapter berhasil dimuat"
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ChapterListResponse"
+              example:
+                success: true
+                message: "Daftar chapter berhasil dimuat"
+                data:
+                  - id: "550e8400-e29b-41d4-a716-446655440000"
+                    title: "Ana Kabar Kaget!"
+                    description: "Andi kudu nekat budhal nang Tulungagung demi mjuangne tresnane."
+                    cover_image_url: "https://storage.lathi.id/chapters/ch1_cover.webp"
+                    order_index: 1
+                    is_locked: false
+                    is_completed: true
+                  - id: "550e8400-e29b-41d4-a716-446655440001"
+                    title: "Sinau Dadi Priyayi"
+                    description: "Andi meguru tata krama nang Pakdhe Joyo ben ora ngisin-ngisini."
+                    cover_image_url: "https://storage.lathi.id/chapters/ch2_cover.webp"
+                    order_index: 2
+                    is_locked: true
+                    is_completed: false
+        "401":
+          $ref: "#/components/responses/ErrChaptersUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrChaptersInternal"
+
+  /stories/chapters/{id}/content:
+    get:
+      tags:
+        - Story
+      summary: Get Chapter Content
+      description: Get complete content of a chapter including all slides, characters, vocabularies, and choices.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Chapter UUID
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: OK - Chapter content retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Konten chapter berhasil dimuat"
+                      data:
+                        $ref: "#/components/schemas/ChapterContentResponse"
+              example:
+                success: true
+                message: "Konten chapter berhasil dimuat"
+                data:
+                  chapter_id: "550e8400-e29b-41d4-a716-446655440000"
+                  slides:
+                    - id: "660e8400-e29b-41d4-a716-446655440001"
+                      background_image_url: "https://storage.lathi.id/bg/warmindo.webp"
+                      characters:
+                        - name: "Andi"
+                          image_url: "https://storage.lathi.id/chars/andi_neutral.webp"
+                          is_active: true
+                        - name: "Sekar"
+                          image_url: "https://storage.lathi.id/chars/sekar_happy.webp"
+                          is_active: false
+                      audio_file_url: "https://storage.lathi.id/audio/slide_001.mp3"
+                      speaker_name: "Narator"
+                      content: "Wanci sonten ing kutha Surabaya..."
+                      next_slide_id: "660e8400-e29b-41d4-a716-446655440002"
+                      vocabularies:
+                        - id: "770e8400-e29b-41d4-a716-446655440000"
+                          word_krama: "sowan"
+                          word_ngoko: "teka/mertamu"
+                          word_indo: "berkunjung (hormat)"
+                      choices:
+                        - index: 0
+                          text: "Sugeng siang, Pak."
+                        - index: 1
+                          text: "Assalamualaikum, Pak."
+        "400":
+          $ref: "#/components/responses/ErrChapterContentBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrChapterContentUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrChapterContentNotFound"
+        "500":
+          $ref: "#/components/responses/ErrChapterContentInternal"
+
+  /stories/chapters/{id}/session:
+    get:
+      tags:
+        - Story
+      summary: Get User Session
+      description: Retrieve user's current progress/session for a specific chapter. Returns null if user hasn't started the chapter yet.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Chapter UUID
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: OK - Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Progressmu berhasil dipulihkan"
+                      data:
+                        oneOf:
+                          - $ref: "#/components/schemas/UserSessionResponse"
+                          - type: "null"
+              examples:
+                withSession:
+                  summary: User has started the chapter
+                  value:
+                    success: true
+                    message: "Progressmu berhasil dipulihkan"
+                    data:
+                      session_id: "550e8400-e29b-41d4-a716-446655440000"
+                      current_slide_id: "660e8400-e29b-41d4-a716-446655440001"
+                      current_hearts: 2
+                      is_game_over: false
+                      is_completed: false
+                      history_log:
+                        - speaker: "Narator"
+                          text: "Wanci sonten ing kutha Surabaya..."
+                          is_user: false
+                          timestamp: "2024-01-15T10:30:00Z"
+                        - speaker: "Andi"
+                          text: "Sugeng siang, Pak."
+                          is_user: true
+                          timestamp: "2024-01-15T10:30:15Z"
+                noSession:
+                  summary: User hasn't started the chapter
+                  value:
+                    success: true
+                    message: "Progressmu berhasil dipulihkan"
+                    data: null
+        "400":
+          $ref: "#/components/responses/ErrSessionBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrSessionUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrSessionInternal"
+
+  /stories/chapters/{id}/start:
+    post:
+      tags:
+        - Story
+      summary: Start New Session
+      description: Start a new gameplay session for a specific chapter. Initializes progress with 3 hearts and sets current slide to the first slide.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Chapter UUID
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: OK - Session started successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Permainan dimulai, semangat ya!"
+                      data:
+                        type: "null"
+                        example: null
+        "400":
+          $ref: "#/components/responses/ErrStartSessionBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrStartSessionUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrStartSessionNotFound"
+        "500":
+          $ref: "#/components/responses/ErrStartSessionInternal"
+
+  /stories/action:
+    post:
+      tags:
+        - Story
+      summary: Submit Story Action
+      description: |
+        Submit user action (next slide or choice selection) during gameplay.
+        - Updates session state (hearts, history log, current slide)
+        - Handles choice selection with mood impact
+        - Detects game over (hearts <= 0) or completion (no next slide)
+        - Unlocks vocabularies when encountered
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoryActionRequest"
+            examples:
+              nextSlide:
+                summary: Move to next slide (no choice)
+                value:
+                  chapter_id: "550e8400-e29b-41d4-a716-446655440000"
+                  slide_id: "660e8400-e29b-41d4-a716-446655440001"
+                  choice_index: null
+              selectChoice:
+                summary: Select a choice option
+                value:
+                  chapter_id: "550e8400-e29b-41d4-a716-446655440000"
+                  slide_id: "660e8400-e29b-41d4-a716-446655440001"
+                  choice_index: 0
+      responses:
+        "200":
+          description: OK - Action processed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Aksimu berhasil diproses!"
+                      data:
+                        $ref: "#/components/schemas/StoryActionResponse"
+              examples:
+                normalProgress:
+                  summary: Normal progress (hearts remaining)
+                  value:
+                    success: true
+                    message: "Aksimu berhasil diproses!"
+                    data:
+                      is_game_over: false
+                      is_completed: false
+                      message: ""
+                      remaining_hearts: 3
+                      next_slide_id: "660e8400-e29b-41d4-a716-446655440002"
+                      history_log:
+                        - speaker: "Narator"
+                          text: "Wanci sonten ing kutha Surabaya..."
+                          is_user: false
+                          timestamp: "2024-01-15T10:30:00Z"
+                        - speaker: "Andi"
+                          text: "Sugeng siang, Pak."
+                          is_user: true
+                          timestamp: "2024-01-15T10:30:15Z"
+                gameOver:
+                  summary: Game over (hearts depleted)
+                  value:
+                    success: true
+                    message: "Aksimu berhasil diproses!"
+                    data:
+                      is_game_over: true
+                      is_completed: false
+                      message: "Pak Broto kuciwo karo omonganmu. Coba maneh ya!"
+                      remaining_hearts: 0
+                      next_slide_id: "660e8400-e29b-41d4-a716-446655440002"
+                      history_log:
+                        - speaker: "Andi"
+                          text: "Mas Andi aja ngono..."
+                          is_user: true
+                          timestamp: "2024-01-15T10:35:00Z"
+                completed:
+                  summary: Chapter completed
+                  value:
+                    success: true
+                    message: "Aksimu berhasil diproses!"
+                    data:
+                      is_game_over: false
+                      is_completed: true
+                      message: "Sugeng! Sampeyan wis rampung crita iki."
+                      remaining_hearts: 2
+                      next_slide_id: null
+                      history_log:
+                        - speaker: "Narator"
+                          text: "TAMAT."
+                          is_user: false
+                          timestamp: "2024-01-15T10:40:00Z"
+        "400":
+          $ref: "#/components/responses/ErrActionBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrActionValidation"
+        "401":
+          $ref: "#/components/responses/ErrActionUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrActionNotFound"
+        "500":
+          $ref: "#/components/responses/ErrActionInternal"
