@@ -27,6 +27,10 @@ import (
 	storyHdl "github.com/Ablebil/lathi-be/internal/app/story/handler"
 	storyRepo "github.com/Ablebil/lathi-be/internal/app/story/repository"
 	storyUc "github.com/Ablebil/lathi-be/internal/app/story/usecase"
+
+	dictHdl "github.com/Ablebil/lathi-be/internal/app/dictionary/handler"
+	dictRepo "github.com/Ablebil/lathi-be/internal/app/dictionary/repository"
+	dictUc "github.com/Ablebil/lathi-be/internal/app/dictionary/usecase"
 )
 
 func Start() error {
@@ -67,6 +71,11 @@ func Start() error {
 	storyRepository := storyRepo.NewStoryRepository(db)
 	storyUsecase := storyUc.NewStoryUsecase(storyRepository, storage, env)
 	storyHdl.NewStoryHandler(v1, val, mw, storyUsecase)
+
+	// dictionary module
+	dictionaryRepository := dictRepo.NewDictionaryRepository(db)
+	dictionaryUsecase := dictUc.NewDictionaryUsecase(dictionaryRepository, env)
+	dictHdl.NewDictionaryHandler(v1, val, mw, dictionaryUsecase)
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
 }

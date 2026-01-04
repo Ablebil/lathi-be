@@ -37,6 +37,8 @@ type Env struct {
 	StorageAccessKey string        `mapstructure:"STORAGE_ACCESS_KEY"`
 	StorageSecretKey string        `mapstructure:"STORAGE_SECRET_KEY"`
 	StorageBucket    string        `mapstructure:"STORAGE_BUCKET"`
+	DefaultPageLimit int           `mapstructure:"DEFAULT_PAGE_LIMIT"`
+	MaxPageLimit     int           `mapstructure:"MAX_PAGE_LIMIT"`
 }
 
 func New() (*Env, error) {
