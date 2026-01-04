@@ -71,7 +71,7 @@ func Start() error {
 
 	// story module
 	storyRepository := storyRepo.NewStoryRepository(db)
-	storyUsecase := storyUc.NewStoryUsecase(storyRepository, storage, env)
+	storyUsecase := storyUc.NewStoryUsecase(storyRepository, userRepository, storage, env)
 	storyHdl.NewStoryHandler(v1, val, mw, storyUsecase)
 
 	// dictionary module

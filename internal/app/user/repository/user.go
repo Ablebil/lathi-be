@@ -50,14 +50,6 @@ func (r *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*entity
 	return &user, nil
 }
 
-func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) error {
-	return r.db.WithContext(ctx).Create(user).Error
-}
-
-func (r *userRepository) UpdateUser(ctx context.Context, user *entity.User) error {
-	return r.db.WithContext(ctx).Save(user).Error
-}
-
 func (r *userRepository) GetUserWithBadges(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	err := r.db.WithContext(ctx).Preload("UserBadges.Badge").Where("id = ?", id).First(&user).Error
@@ -71,4 +63,39 @@ func (r *userRepository) GetUserWithBadges(ctx context.Context, id uuid.UUID) (*
 	}
 
 	return &user, nil
+}
+
+func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
+}
+
+func (r *userRepository) UpdateUser(ctx context.Context, user *entity.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
+}
+
+func (r *userRepository) GetUserLastCompletedChapter(ctx context.Context, userID uuid.UUID) (int, error) {
+	var user entity.User
+	if err := r.db.WithContext(ctx).Select("last_chapter_completed").First(&user, userID).Error; err != nil {
+		return 0, err
+	}
+	return user.LastChapterCompleted, nil
+}
+
+func (r *userRepository) UpdateUserLastCompletedChapter(ctx context.Context, userID uuid.UUID, orderIndex int) error {
+	// udpate only if new orderIndex > current value
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ? AND last_chapter_completed < ?", userID, orderIndex).
+		Update("last_chapter_completed", orderIndex).Error
+}
+
+func (r *userRepository) IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error {
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ?", userID).
+		UpdateColumn("total_words_collected", gorm.Expr("total_words_collected + ?", amount)).Error
+}
+
+func (r *userRepository) UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error {
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ?", userID).
+		Update("current_title", title).Error
 }

@@ -19,27 +19,29 @@ import (
 )
 
 type storyUsecase struct {
-	repo    contract.StoryRepositoryItf
-	storage minio.MinioItf
-	env     *config.Env
+	storyRepo contract.StoryRepositoryItf
+	userRepo  contract.UserRepositoryItf
+	storage   minio.MinioItf
+	env       *config.Env
 }
 
-func NewStoryUsecase(storyRepo contract.StoryRepositoryItf, storage minio.MinioItf, env *config.Env) contract.StoryUsecaseItf {
+func NewStoryUsecase(storyRepo contract.StoryRepositoryItf, userRepo contract.UserRepositoryItf, storage minio.MinioItf, env *config.Env) contract.StoryUsecaseItf {
 	return &storyUsecase{
-		repo:    storyRepo,
-		storage: storage,
-		env:     env,
+		storyRepo: storyRepo,
+		userRepo:  userRepo,
+		storage:   storage,
+		env:       env,
 	}
 }
 
 func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([]dto.ChapterListReponse, *response.APIError) {
-	chapters, err := uc.repo.GetAllChapters(ctx)
+	chapters, err := uc.storyRepo.GetAllChapters(ctx)
 	if err != nil {
 		slog.Error("failed to get chapters", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
 
-	lastCompletedOrder, err := uc.repo.GetUserLastCompletedChapter(ctx, userID)
+	lastCompletedOrder, err := uc.userRepo.GetUserLastCompletedChapter(ctx, userID)
 	if err != nil {
 		slog.Error("failed to get user progress", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
@@ -65,7 +67,7 @@ func (uc *storyUsecase) GetChapterList(ctx context.Context, userID uuid.UUID) ([
 }
 
 func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) (*dto.ChapterContentResponse, *response.APIError) {
-	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
+	chapter, err := uc.storyRepo.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		slog.Error("failed to get chapter", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
@@ -144,7 +146,7 @@ func (uc *storyUsecase) GetChapterContent(ctx context.Context, userID uuid.UUID,
 }
 
 func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uuid.UUID) (*dto.UserSessionResponse, *response.APIError) {
-	session, err := uc.repo.FindSession(ctx, userID, chapterID)
+	session, err := uc.storyRepo.FindSession(ctx, userID, chapterID)
 	if err != nil {
 		slog.Error("failed to get session", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
@@ -169,7 +171,7 @@ func (uc *storyUsecase) GetUserSession(ctx context.Context, userID, chapterID uu
 }
 
 func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chapterID uuid.UUID) *response.APIError {
-	chapter, err := uc.repo.GetChapterByID(ctx, chapterID)
+	chapter, err := uc.storyRepo.GetChapterByID(ctx, chapterID)
 	if err != nil {
 		slog.Error("failed to get chapter info", "error", err)
 		return response.ErrInternal("Coba lagi nanti ya!")
@@ -191,7 +193,7 @@ func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chap
 		HistoryLog:     []byte("[]"),
 	}
 
-	if err := uc.repo.CreateSession(ctx, session); err != nil {
+	if err := uc.storyRepo.CreateSession(ctx, session); err != nil {
 		slog.Error("failed to create session", "error", err)
 		return response.ErrInternal("Coba lagi nanti ya!")
 	}
@@ -200,7 +202,7 @@ func (uc *storyUsecase) StartSession(ctx context.Context, userID uuid.UUID, chap
 }
 
 func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req *dto.StoryActionRequest) (*dto.StoryActionResponse, *response.APIError) {
-	session, err := uc.repo.FindSession(ctx, userID, req.ChapterID)
+	session, err := uc.storyRepo.FindSession(ctx, userID, req.ChapterID)
 	if err != nil {
 		slog.Error("failed to get session", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
@@ -212,7 +214,7 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		return nil, response.ErrBadRequest("Permainan udah selesai, coba mulai lagi ya!")
 	}
 
-	currentSlide, err := uc.repo.GetSlideByID(ctx, req.SlideID)
+	currentSlide, err := uc.storyRepo.GetSlideByID(ctx, req.SlideID)
 	if err != nil || currentSlide == nil {
 		return nil, response.ErrNotFound("Slide ga ketemu")
 	}
@@ -314,10 +316,10 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		session.IsCompleted = true
 		message = "Sugeng! Sampeyan wis rampung crita iki."
 
-		chapter, _ := uc.repo.GetChapterByID(ctx, req.ChapterID)
+		chapter, _ := uc.storyRepo.GetChapterByID(ctx, req.ChapterID)
 		if chapter != nil {
-			if err := uc.repo.UpdateUserLastCompletedChapter(ctx, userID, chapter.OrderIndex); err == nil {
-				totalChapters, _ := uc.repo.CountChapters(ctx)
+			if err := uc.userRepo.UpdateUserLastCompletedChapter(ctx, userID, chapter.OrderIndex); err == nil {
+				totalChapters, _ := uc.storyRepo.CountChapters(ctx)
 				if totalChapters > 0 {
 					progress := (float64(chapter.OrderIndex) / float64(totalChapters)) * 100
 
@@ -330,14 +332,14 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 						newTitle = entity.Priyayi
 					}
 
-					_ = uc.repo.UpdateUserTitle(ctx, userID, newTitle)
+					_ = uc.userRepo.UpdateUserTitle(ctx, userID, newTitle)
 				}
 			}
 		}
 	}
 
 	session.UpdatedAt = time.Now()
-	if err := uc.repo.UpdateSession(ctx, session); err != nil {
+	if err := uc.storyRepo.UpdateSession(ctx, session); err != nil {
 		slog.Error("failed to update session", "error", err)
 		return nil, response.ErrInternal("Coba lagi nanti ya!")
 	}
@@ -349,11 +351,11 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 			vocabIDs = append(vocabIDs, v.ID)
 		}
 
-		newWordsCount, err := uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
+		newWordsCount, err := uc.storyRepo.UnlockVocabularies(ctx, userID, vocabIDs)
 		if err != nil {
 			slog.Error("failed to unlock vocabs", "error", err)
 		} else if newWordsCount > 0 {
-			_ = uc.repo.IncrementUserWordCount(ctx, userID, int(newWordsCount))
+			_ = uc.userRepo.IncrementUserWordCount(ctx, userID, int(newWordsCount))
 		}
 	}
 

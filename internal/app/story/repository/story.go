@@ -97,21 +97,6 @@ func (r *storyRepository) UpdateSession(ctx context.Context, session *entity.Use
 	return r.db.WithContext(ctx).Save(session).Error
 }
 
-func (r *storyRepository) GetUserLastCompletedChapter(ctx context.Context, userID uuid.UUID) (int, error) {
-	var user entity.User
-	if err := r.db.WithContext(ctx).Select("last_chapter_completed").First(&user, userID).Error; err != nil {
-		return 0, err
-	}
-	return user.LastChapterCompleted, nil
-}
-
-func (r *storyRepository) UpdateUserLastCompletedChapter(ctx context.Context, userID uuid.UUID, orderIndex int) error {
-	// udpate only if new orderIndex > current value
-	return r.db.WithContext(ctx).Model(&entity.User{}).
-		Where("id = ? AND last_chapter_completed < ?", userID, orderIndex).
-		Update("last_chapter_completed", orderIndex).Error
-}
-
 func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) (int64, error) {
 	if len(vocabIDs) == 0 {
 		return 0, nil
@@ -133,20 +118,8 @@ func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UU
 	return result.RowsAffected, result.Error
 }
 
-func (r *storyRepository) IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error {
-	return r.db.WithContext(ctx).Model(&entity.User{}).
-		Where("id = ?", userID).
-		UpdateColumn("total_words_collected", gorm.Expr("total_words_collected + ?", amount)).Error
-}
-
 func (r *storyRepository) CountChapters(ctx context.Context) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).Model(&entity.Chapter{}).Count(&count).Error
 	return count, err
-}
-
-func (r *storyRepository) UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error {
-	return r.db.WithContext(ctx).Model(&entity.User{}).
-		Where("id = ?", userID).
-		Update("current_title", title).Error
 }

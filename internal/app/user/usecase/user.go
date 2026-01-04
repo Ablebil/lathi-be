@@ -34,7 +34,6 @@ func NewUserUsecase(userRepo contract.UserRepositoryItf, storyRepo contract.Stor
 func (uc *userUsecase) GetUserProfile(ctx context.Context, userID uuid.UUID) (*dto.UserProfileResponse, *response.APIError) {
 	user, err := uc.userRepo.GetUserWithBadges(ctx, userID)
 	if err != nil {
-		slog.Error("failed to get user profile", "error", err)
 		return nil, response.ErrNotFound("Akun ga ditemukan, coba daftar dulu ya")
 	}
 
