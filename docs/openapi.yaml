@@ -251,9 +251,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CharacterOnScreen"
-        audio_file_url:
-          type: string
-          example: "https://storage.lathi.id/audio/slide_001.mp3"
         speaker_name:
           type: string
           example: "Narator"
@@ -1407,7 +1404,6 @@ paths:
                         - name: "Sekar"
                           image_url: "https://storage.lathi.id/chars/sekar_happy.webp"
                           is_active: false
-                      audio_file_url: "https://storage.lathi.id/audio/slide_001.mp3"
                       speaker_name: "Narator"
                       content: "Wanci sonten ing kutha Surabaya..."
                       next_slide_id: "660e8400-e29b-41d4-a716-446655440002"

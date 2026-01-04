@@ -44,7 +44,6 @@ type SlideItemResponse struct {
 	ID                 uuid.UUID            `json:"id"`
 	BackgroundImageURL string               `json:"background_image_url"`
 	Characters         []CharacterOnScreen  `json:"characters"`
-	AudioFileURL       string               `json:"audio_file_url"`
 	SpeakerName        string               `json:"speaker_name"`
 	Content            string               `json:"content"`
 	NextSlideID        *uuid.UUID           `json:"next_slide_id"`
