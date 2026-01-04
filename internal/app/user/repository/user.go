@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type userRepository struct {
@@ -98,4 +100,21 @@ func (r *userRepository) UpdateUserTitle(ctx context.Context, userID uuid.UUID, 
 	return r.db.WithContext(ctx).Model(&entity.User{}).
 		Where("id = ?", userID).
 		Update("current_title", title).Error
+}
+
+func (r *userRepository) AssignBadge(ctx context.Context, userID uuid.UUID, badgeCode string) error {
+	var badge entity.Badge
+	if err := r.db.WithContext(ctx).Where("code = ?", badgeCode).First(&badge).Error; err != nil {
+		return err
+	}
+
+	userBadge := entity.UserBadge{
+		UserID:   userID,
+		BadgeID:  badge.ID,
+		EarnedAt: time.Now(),
+	}
+
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		DoNothing: true,
+	}).Create(&userBadge).Error
 }

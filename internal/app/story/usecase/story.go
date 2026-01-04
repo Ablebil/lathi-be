@@ -334,6 +334,19 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 
 					_ = uc.userRepo.UpdateUserTitle(ctx, userID, newTitle)
 				}
+
+				// badge 1
+				if chapter.OrderIndex == 1 {
+					_ = uc.userRepo.AssignBadge(ctx, userID, "ch1_completion")
+				}
+
+				if int64(chapter.OrderIndex) == totalChapters {
+					_ = uc.userRepo.AssignBadge(ctx, userID, "all_chapters_completion")
+				}
+
+				if session.CurrentHearts == 3 {
+					_ = uc.userRepo.AssignBadge(ctx, userID, "perfect_heart")
+				}
 			}
 		}
 	}
@@ -356,6 +369,13 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 			slog.Error("failed to unlock vocabs", "error", err)
 		} else if newWordsCount > 0 {
 			_ = uc.userRepo.IncrementUserWordCount(ctx, userID, int(newWordsCount))
+
+			user, err := uc.userRepo.GetUserByID(ctx, userID)
+			if err == nil && user != nil {
+				if user.TotalWordsCollected >= 30 {
+					_ = uc.userRepo.AssignBadge(ctx, userID, "vocab_collector_1")
+				}
+			}
 		}
 	}
 

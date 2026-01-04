@@ -23,4 +23,5 @@ type UserRepositoryItf interface {
 	UpdateUserLastCompletedChapter(ctx context.Context, userID uuid.UUID, orderIndex int) error
 	IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error
 	UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error
+	AssignBadge(ctx context.Context, userID uuid.UUID, badgeCode string) error
 }
