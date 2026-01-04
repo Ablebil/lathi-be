@@ -45,9 +45,15 @@ func New(env *config.Env) *fiber.App {
 	app.Use(healthcheck.New())
 	app.Use(compress.New(compress.Config{Level: compress.LevelBestSpeed}))
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: env.FEURL,
-		AllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-		AllowHeaders: "Content-Type, Authorization",
+		AllowOrigins: func() string {
+			if env.AppEnv == "development" {
+				return "*"
+			}
+			return env.FEURL
+		}(),
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+		AllowHeaders:     "Content-Type, Authorization",
+		AllowCredentials: env.AppEnv == "production",
 	}))
 	app.Use(logger.New(logger.Config{
 		Format: "${time} | ${status} | ${method} | ${path} | ${latency}\n",
