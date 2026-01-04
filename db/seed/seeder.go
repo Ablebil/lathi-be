@@ -13,11 +13,12 @@ type Seeder interface {
 }
 
 var registry = map[string]Seeder{
+	"badge": &BadgeSeeder{},
 	"user":  &UserSeeder{},
 	"story": &StorySeeder{},
 }
 
-var executionOrder = []string{"user", "story"}
+var executionOrder = []string{"badge", "user", "story"}
 
 func Seed(env *config.Env, domain string) {
 	db, err := postgresql.New(env)
