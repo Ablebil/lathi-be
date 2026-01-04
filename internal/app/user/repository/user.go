@@ -57,3 +57,18 @@ func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) erro
 func (r *userRepository) UpdateUser(ctx context.Context, user *entity.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
 }
+
+func (r *userRepository) GetUserWithBadges(ctx context.Context, id uuid.UUID) (*entity.User, error) {
+	var user entity.User
+	err := r.db.WithContext(ctx).Preload("UserBadges.Badge").Where("id = ?", id).First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

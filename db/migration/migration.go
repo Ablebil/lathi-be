@@ -22,6 +22,8 @@ func Migrate(env *config.Env, action string) {
 		&entity.Chapter{},
 		&entity.Slide{},
 		&entity.UserStorySession{},
+		&entity.Badge{},
+		&entity.UserBadge{},
 	}
 
 	switch action {

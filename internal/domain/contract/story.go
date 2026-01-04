@@ -26,5 +26,8 @@ type StoryRepositoryItf interface {
 	UpdateSession(ctx context.Context, session *entity.UserStorySession) error
 	GetUserLastCompletedChapter(ctx context.Context, userID uuid.UUID) (int, error)
 	UpdateUserLastCompletedChapter(ctx context.Context, userID uuid.UUID, orderIndex int) error
-	UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) error
+	UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) (int64, error)
+	IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error
+	CountChapters(ctx context.Context) (int64, error)
+	UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error
 }

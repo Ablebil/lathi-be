@@ -316,7 +316,23 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 
 		chapter, _ := uc.repo.GetChapterByID(ctx, req.ChapterID)
 		if chapter != nil {
-			_ = uc.repo.UpdateUserLastCompletedChapter(ctx, userID, chapter.OrderIndex)
+			if err := uc.repo.UpdateUserLastCompletedChapter(ctx, userID, chapter.OrderIndex); err == nil {
+				totalChapters, _ := uc.repo.CountChapters(ctx)
+				if totalChapters > 0 {
+					progress := (float64(chapter.OrderIndex) / float64(totalChapters)) * 100
+
+					var newTitle entity.Title
+					if progress <= 30 {
+						newTitle = entity.Cantrik
+					} else if progress <= 70 {
+						newTitle = entity.Abdi
+					} else {
+						newTitle = entity.Priyayi
+					}
+
+					_ = uc.repo.UpdateUserTitle(ctx, userID, newTitle)
+				}
+			}
 		}
 	}
 
@@ -332,7 +348,13 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 		for _, v := range currentSlide.Vocabularies {
 			vocabIDs = append(vocabIDs, v.ID)
 		}
-		_ = uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
+
+		newWordsCount, err := uc.repo.UnlockVocabularies(ctx, userID, vocabIDs)
+		if err != nil {
+			slog.Error("failed to unlock vocabs", "error", err)
+		} else if newWordsCount > 0 {
+			_ = uc.repo.IncrementUserWordCount(ctx, userID, int(newWordsCount))
+		}
 	}
 
 	return &dto.StoryActionResponse{

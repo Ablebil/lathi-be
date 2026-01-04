@@ -14,4 +14,5 @@ type DictionaryUsecaseItf interface {
 
 type DictionaryRepositoryItf interface {
 	GetDictionaries(ctx context.Context, userID uuid.UUID, search string, limit, offset int) ([]dto.DictionaryResponse, int64, error)
+	CountTotalVocabs(ctx context.Context) (int64, error)
 }

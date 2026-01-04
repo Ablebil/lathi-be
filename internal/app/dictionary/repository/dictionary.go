@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
+	"github.com/Ablebil/lathi-be/internal/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -49,4 +50,10 @@ func (r *dictionaryRepository) GetDictionaries(ctx context.Context, userID uuid.
 	}
 
 	return results, total, nil
+}
+
+func (r *dictionaryRepository) CountTotalVocabs(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&entity.Dictionary{}).Count(&count).Error
+	return count, err
 }

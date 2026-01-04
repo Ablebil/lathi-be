@@ -112,9 +112,9 @@ func (r *storyRepository) UpdateUserLastCompletedChapter(ctx context.Context, us
 		Update("last_chapter_completed", orderIndex).Error
 }
 
-func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) error {
+func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UUID, vocabIDs []uuid.UUID) (int64, error) {
 	if len(vocabIDs) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	userVocabs := make([]entity.UserVocabulary, len(vocabIDs))
@@ -126,7 +126,27 @@ func (r *storyRepository) UnlockVocabularies(ctx context.Context, userID uuid.UU
 		}
 	}
 
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+	result := r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		DoNothing: true,
-	}).Create(&userVocabs).Error
+	}).Create(&userVocabs)
+
+	return result.RowsAffected, result.Error
+}
+
+func (r *storyRepository) IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error {
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ?", userID).
+		UpdateColumn("total_words_collected", gorm.Expr("total_words_collected + ?", amount)).Error
+}
+
+func (r *storyRepository) CountChapters(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&entity.Chapter{}).Count(&count).Error
+	return count, err
+}
+
+func (r *storyRepository) UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error {
+	return r.db.WithContext(ctx).Model(&entity.User{}).
+		Where("id = ?", userID).
+		Update("current_title", title).Error
 }
