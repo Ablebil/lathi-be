@@ -1,17 +1,27 @@
 package seed
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
+	lbRepo "github.com/Ablebil/lathi-be/internal/app/leaderboard/repository"
+	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
+	"github.com/Ablebil/lathi-be/internal/infra/redis"
 	"github.com/Ablebil/lathi-be/pkg/bcrypt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-type UserSeeder struct{}
+type UserSeeder struct {
+	env *config.Env
+}
+
+func NewUserSeeder(env *config.Env) *UserSeeder {
+	return &UserSeeder{env: env}
+}
 
 func (s *UserSeeder) Run(db *gorm.DB) error {
 	slog.Info("seeding user domain...")
@@ -138,5 +148,18 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 	}
 
 	slog.Info("user seeding completed successfully")
+
+	// populate leaderboard in redis
+	slog.Info("populating leaderboard in redis")
+	cache := redis.New(s.env)
+	lbRepository := lbRepo.NewLeaderboardRepository(db, cache)
+
+	ctx := context.Background()
+	if err := lbRepository.RebuildLeaderboard(ctx); err != nil {
+		slog.Error("failed to populate leaderboard", "error", err)
+		return err
+	}
+	slog.Info("leaderboard populated successfully")
+
 	return nil
 }

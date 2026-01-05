@@ -14,7 +14,6 @@ type Seeder interface {
 
 var registry = map[string]Seeder{
 	"badge": &BadgeSeeder{},
-	"user":  &UserSeeder{},
 	"story": &StorySeeder{},
 }
 
@@ -31,10 +30,16 @@ func Seed(env *config.Env, domain string) {
 
 	// specific domain seeding
 	if domain != "" {
-		seeder, ok := registry[domain]
-		if !ok {
-			slog.Error("seeder not found for domain", "domain", domain)
-			return
+		var seeder Seeder
+		if domain == "user" {
+			seeder = NewUserSeeder(env)
+		} else {
+			var ok bool
+			seeder, ok = registry[domain]
+			if !ok {
+				slog.Error("seeder not found for domain", "domain", domain)
+				return
+			}
 		}
 
 		slog.Info("running specific seeder", "domain", domain)
@@ -49,7 +54,13 @@ func Seed(env *config.Env, domain string) {
 	// run all seeders
 	slog.Info("running all seeders...")
 	for _, name := range executionOrder {
-		seeder := registry[name]
+		var seeder Seeder
+		if name == "user" {
+			seeder = NewUserSeeder(env)
+		} else {
+			seeder = registry[name]
+		}
+
 		slog.Info("running seeder", "domain", name)
 
 		if err := seeder.Run(db); err != nil {
