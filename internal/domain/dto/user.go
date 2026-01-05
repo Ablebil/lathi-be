@@ -6,6 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
+type EditUserProfileRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+}
+
 type UserBadgeResponse struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`

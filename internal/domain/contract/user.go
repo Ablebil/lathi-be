@@ -11,6 +11,7 @@ import (
 
 type UserUsecaseItf interface {
 	GetUserProfile(ctx context.Context, userID uuid.UUID) (*dto.UserProfileResponse, *response.APIError)
+	EditUserProfile(ctx context.Context, userID uuid.UUID, req *dto.EditUserProfileRequest) (*dto.UserProfileResponse, *response.APIError)
 }
 
 type UserRepositoryItf interface {

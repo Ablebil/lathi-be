@@ -2,23 +2,28 @@ package handler
 
 import (
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
+	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
+	"github.com/Ablebil/lathi-be/pkg/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
 type userHandler struct {
-	uc contract.UserUsecaseItf
+	val validator.ValidatorItf
+	uc  contract.UserUsecaseItf
 }
 
-func NewUserHandler(router fiber.Router, mw middleware.MiddlewareItf, uc contract.UserUsecaseItf) {
+func NewUserHandler(router fiber.Router, validator validator.ValidatorItf, mw middleware.MiddlewareItf, userUc contract.UserUsecaseItf) {
 	handler := &userHandler{
-		uc: uc,
+		val: validator,
+		uc:  userUc,
 	}
 
 	userRouter := router.Group("/users", mw.Authenticate)
 	userRouter.Get("/profile", handler.getProfile)
+	userRouter.Patch("/profile", handler.editProfile)
 }
 
 func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
@@ -34,4 +39,28 @@ func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Profilmu berhasil dimuat", resp)
+}
+
+func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
+	}
+	userID, _ := uuid.Parse(userIDStr)
+
+	req := new(dto.EditUserProfileRequest)
+	if err := ctx.BodyParser(&req); err != nil {
+		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
+	}
+
+	if err := h.val.ValidateStruct(req); err != nil {
+		return response.Error(ctx, response.NewValidationError(err), err)
+	}
+
+	resp, apiErr := h.uc.EditUserProfile(ctx.Context(), userID, req)
+	if apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
+	}
+
+	return response.Success(ctx, fiber.StatusOK, "Profilmu berhasil diperbarui", resp)
 }

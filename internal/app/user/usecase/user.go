@@ -84,3 +84,32 @@ func (uc *userUsecase) GetUserProfile(ctx context.Context, userID uuid.UUID) (*d
 		Badges: badgeResponses,
 	}, nil
 }
+
+func (uc *userUsecase) EditUserProfile(ctx context.Context, userID uuid.UUID, req *dto.EditUserProfileRequest) (*dto.UserProfileResponse, *response.APIError) {
+	user, err := uc.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		slog.Error("failed to get user", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
+	}
+
+	if user.Username == req.Username {
+		return nil, response.ErrBadRequest("Username baru sama dengan yang lama")
+	}
+
+	existingUser, err := uc.userRepo.GetUserByUsername(ctx, req.Username)
+	if err != nil {
+		slog.Error("failed to get user", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
+	}
+	if existingUser != nil {
+		return nil, response.ErrConflict("Username ini udah dipake, coba yang lain ya")
+	}
+
+	user.Username = req.Username
+	if err := uc.userRepo.UpdateUser(ctx, user); err != nil {
+		slog.Error("failed to update user", "error", err)
+		return nil, response.ErrInternal("Coba lagi nanti ya!")
+	}
+
+	return uc.GetUserProfile(ctx, userID)
+}

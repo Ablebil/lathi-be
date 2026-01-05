@@ -81,7 +81,7 @@ func Start() error {
 
 	// user module
 	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, storage, env)
-	userHdl.NewUserHandler(v1, mw, userUsecase)
+	userHdl.NewUserHandler(v1, val, mw, userUsecase)
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
 }
