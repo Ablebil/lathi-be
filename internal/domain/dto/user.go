@@ -7,7 +7,7 @@ import (
 )
 
 type EditUserProfileRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=30,alphanum"`
+	Username string `json:"username" validate:"required,min=3,max=50,alphanum"`
 }
 
 type UserBadgeResponse struct {

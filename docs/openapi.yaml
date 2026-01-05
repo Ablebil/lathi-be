@@ -400,6 +400,85 @@ components:
         pagination:
           $ref: "#/components/schemas/PaginationMeta"
 
+    # user schemas
+    EditUserProfileRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: "^[a-zA-Z0-9]+$"
+          description: Username hanya boleh mengandung huruf dan angka
+          example: "andi123"
+
+    UserBadgeResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Satriya Anyar"
+        description:
+          type: string
+          example: "Langkah kapisan wis dilakoni. Wani miwiti, wani mungkasi."
+        icon_url:
+          type: string
+          example: "https://storage.lathi.id/badges/satriya_anyar.webp"
+        earned_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    UserStatsResponse:
+      type: object
+      properties:
+        total_chapters:
+          type: integer
+          example: 4
+        completed_chapters:
+          type: integer
+          example: 2
+        progress_percent:
+          type: number
+          format: float
+          example: 50.0
+        total_vocabs:
+          type: integer
+          example: 64
+        collected_vocabs:
+          type: integer
+          example: 25
+
+    UserProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        username:
+          type: string
+          example: "andi"
+        email:
+          type: string
+          format: email
+          example: "andi@lathi.id"
+        avatar_url:
+          type: string
+          example: "https://storage.lathi.id/avatars/default.webp"
+        current_title:
+          type: string
+          enum: ["cantrik", "abdi", "priyayi"]
+          example: "cantrik"
+        stats:
+          $ref: "#/components/schemas/UserStatsResponse"
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserBadgeResponse"
+
   responses:
     # /auth/register errors
     ErrRegisterBadRequest:
@@ -434,18 +513,30 @@ components:
                 password: "min"
 
     ErrRegisterConflict:
-      description: Conflict - Email already registered
+      description: Conflict - Email or username already registered
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error:
-              type: "conflict"
-              message: "Data udah ada sebelumnya"
-              detail: "Email ini udah pernah didaftarin, coba email lain ya"
-              status: 409
+          examples:
+            emailExists:
+              summary: Email already registered
+              value:
+                success: false
+                error:
+                  type: "conflict"
+                  message: "Data udah ada sebelumnya"
+                  detail: "Email ini udah pernah didaftarin, coba email lain ya"
+                  status: 409
+            usernameExists:
+              summary: Username already taken
+              value:
+                success: false
+                error:
+                  type: "conflict"
+                  message: "Data udah ada sebelumnya"
+                  detail: "Username ini udah dipake, coba yang lain ya"
+                  status: 409
 
     ErrRegisterInternal:
       description: Internal server error
@@ -1126,11 +1217,142 @@ components:
               detail: "Coba lagi nanti ya!"
               status: 500
 
+    # GET /users/profile errors
+    ErrGetProfileUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrGetProfileNotFound:
+      description: Not found - User account not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Akun ga ditemukan, coba daftar dulu ya"
+              status: 404
+
+    ErrGetProfileInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
+    # PATCH /users/profile errors
+    ErrEditProfileBadRequest:
+      description: Bad request - Multiple scenarios (parse error, same username)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          examples:
+            parseError:
+              summary: Failed to parse request body
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
+                  status: 400
+            sameUsername:
+              summary: New username is same as current
+              value:
+                success: false
+                error:
+                  type: "bad_request"
+                  message: "Data yang dikirimkan salah"
+                  detail: "Username baru sama dengan yang lama"
+                  status: 400
+
+    ErrEditProfileValidation:
+      description: Validation error - Invalid input fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "validation_error"
+              message: "Ups, ada data yang ga sesuai nih"
+              status: 422
+              fields:
+                username: "alphanum"
+
+    ErrEditProfileUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrEditProfileConflict:
+      description: Conflict - Username already taken
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "conflict"
+              message: "Data udah ada sebelumnya"
+              detail: "Username ini udah dipake, coba yang lain ya"
+              status: 409
+
+    ErrEditProfileInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
 tags:
   - name: Auth
     description: Authentication endpoints
   - name: Story
     description: Story and chapter management endpoints
+  - name: Dictionary
+    description: Dictionary and vocabulary endpoints
+  - name: User
+    description: User profile management endpoints
 
 paths:
   # auth endpoints
@@ -1717,3 +1939,115 @@ paths:
           $ref: "#/components/responses/ErrDictionaryUnauthorized"
         "500":
           $ref: "#/components/responses/ErrDictionaryInternal"
+
+  # user endpoints
+  /users/profile:
+    get:
+      tags:
+        - User
+      summary: Get User Profile
+      description: Get authenticated user's profile including stats, badges, and progress information.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK - Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Profilmu berhasil dimuat"
+                      data:
+                        $ref: "#/components/schemas/UserProfileResponse"
+              example:
+                success: true
+                message: "Profilmu berhasil dimuat"
+                data:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  username: "andi"
+                  email: "andi@lathi.id"
+                  avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                  current_title: "cantrik"
+                  stats:
+                    total_chapters: 4
+                    completed_chapters: 2
+                    progress_percent: 50.0
+                    total_vocabs: 64
+                    collected_vocabs: 32
+                  badges:
+                    - name: "Satriya Anyar"
+                      description: "Langkah kapisan wis dilakoni. Wani miwiti, wani mungkasi."
+                      icon_url: "https://storage.lathi.id/badges/satriya_anyar.webp"
+                      earned_at: "2024-01-15T10:30:00Z"
+                    - name: "Widya Tembung"
+                      description: "Bausastra ing sirah saya akeh. Bekal wicara supaya ora kleru."
+                      icon_url: "https://storage.lathi.id/badges/vocab_collector_1.webp"
+                      earned_at: "2024-01-16T14:20:00Z"
+        "401":
+          $ref: "#/components/responses/ErrGetProfileUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrGetProfileNotFound"
+        "500":
+          $ref: "#/components/responses/ErrGetProfileInternal"
+
+    patch:
+      tags:
+        - User
+      summary: Edit User Profile
+      description: Update authenticated user's username. Returns updated profile information.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditUserProfileRequest"
+      responses:
+        "200":
+          description: OK - Profile updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Profilmu berhasil diperbarui"
+                      data:
+                        $ref: "#/components/schemas/UserProfileResponse"
+              example:
+                success: true
+                message: "Profilmu berhasil diperbarui"
+                data:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  username: "andi123"
+                  email: "andi@lathi.id"
+                  avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                  current_title: "cantrik"
+                  stats:
+                    total_chapters: 4
+                    completed_chapters: 2
+                    progress_percent: 50.0
+                    total_vocabs: 64
+                    collected_vocabs: 32
+                  badges:
+                    - name: "Satriya Anyar"
+                      description: "Langkah kapisan wis dilakoni. Wani miwiti, wani mungkasi."
+                      icon_url: "https://storage.lathi.id/badges/satriya_anyar.webp"
+                      earned_at: "2024-01-15T10:30:00Z"
+        "400":
+          $ref: "#/components/responses/ErrEditProfileBadRequest"
+        "422":
+          $ref: "#/components/responses/ErrEditProfileValidation"
+        "401":
+          $ref: "#/components/responses/ErrEditProfileUnauthorized"
+        "409":
+          $ref: "#/components/responses/ErrEditProfileConflict"
+        "500":
+          $ref: "#/components/responses/ErrEditProfileInternal"

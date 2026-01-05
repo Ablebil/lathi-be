@@ -83,7 +83,7 @@ func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "Prorgesmu berhasil dipulihkan", resp)
+	return response.Success(ctx, fiber.StatusOK, "Progressmu berhasil dipulihkan", resp)
 }
 
 func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
