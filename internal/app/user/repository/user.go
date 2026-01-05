@@ -37,6 +37,21 @@ func (r *userRepository) GetUserByEmail(ctx context.Context, email string) (*ent
 	return &user, nil
 }
 
+func (r *userRepository) GetUserByUsername(ctx context.Context, username string) (*entity.User, error) {
+	var user entity.User
+	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error

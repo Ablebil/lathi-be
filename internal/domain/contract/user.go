@@ -15,6 +15,7 @@ type UserUsecaseItf interface {
 
 type UserRepositoryItf interface {
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*entity.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*entity.User, error)
 	GetUserWithBadges(ctx context.Context, id uuid.UUID) (*entity.User, error)
 	CreateUser(ctx context.Context, user *entity.User) error

@@ -48,6 +48,15 @@ func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *
 		return response.ErrConflict("Email ini udah pernah didaftarin, coba email lain ya")
 	}
 
+	userByUsn, err := uc.repo.GetUserByUsername(ctx, req.Username)
+	if err != nil {
+		slog.Error("failed to get user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
+	}
+	if userByUsn != nil {
+		return response.ErrConflict("Username ini udah dipake, coba yang lain ya")
+	}
+
 	hashed, err := uc.bcrypt.Hash(req.Password)
 	if err != nil {
 		slog.Error("failed to hash password", "error", err)
