@@ -76,40 +76,66 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "Login sukses! Yuk mulai eksplorasi!", resp)
+	ctx.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    resp.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(7 * 24 * 60 * 60),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
+
+	return response.Success(ctx, fiber.StatusOK, "Login sukses! Yuk mulai eksplorasi!", map[string]string{
+		"access_token": resp.AccessToken,
+	})
 }
 
 func (h *authHandler) refresh(ctx *fiber.Ctx) error {
-	req := new(dto.RefreshRequest)
-	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
+	refreshToken := ctx.Cookies("refresh_token")
+	if refreshToken == "" {
+		return response.Error(ctx, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya"), nil)
 	}
 
-	if err := h.val.ValidateStruct(req); err != nil {
-		return response.Error(ctx, response.NewValidationError(err), err)
-	}
-
-	resp, apiErr := h.uc.Refresh(ctx.Context(), req)
+	resp, apiErr := h.uc.Refresh(ctx.Context(), refreshToken)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
-	return response.Success(ctx, fiber.StatusOK, "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!", resp)
+	ctx.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    resp.RefreshToken,
+		Path:     "/",
+		MaxAge:   int(7 * 24 * 60 * 60),
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
+
+	return response.Success(ctx, fiber.StatusOK, "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!", map[string]string{
+		"access_token": resp.AccessToken,
+	})
 }
 
 func (h *authHandler) logout(ctx *fiber.Ctx) error {
-	req := new(dto.LogoutRequest)
-	if err := ctx.BodyParser(&req); err != nil {
-		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
+	refreshToken := ctx.Cookies("refresh_token")
+	if refreshToken == "" {
+		return response.Error(ctx, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya"), nil)
 	}
 
-	if err := h.val.ValidateStruct(req); err != nil {
-		return response.Error(ctx, response.NewValidationError(err), err)
-	}
-
-	if apiErr := h.uc.Logout(ctx.Context(), req); apiErr != nil {
+	if apiErr := h.uc.Logout(ctx.Context(), refreshToken); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
+
+	ctx.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: "Lax",
+	})
 
 	return response.Success(ctx, fiber.StatusOK, "Logout berhasil, sampai jumpa lagi!", nil)
 }

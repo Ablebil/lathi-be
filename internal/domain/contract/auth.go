@@ -11,6 +11,6 @@ type AuthUsecaseItf interface {
 	Register(ctx context.Context, req *dto.RegisterRequest) *response.APIError
 	Verify(ctx context.Context, req *dto.VerifyRequest) *response.APIError
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.TokenResponse, *response.APIError)
-	Refresh(ctx context.Context, req *dto.RefreshRequest) (*dto.TokenResponse, *response.APIError)
-	Logout(ctx context.Context, req *dto.LogoutRequest) *response.APIError
+	Refresh(ctx context.Context, refreshToken string) (*dto.TokenResponse, *response.APIError)
+	Logout(ctx context.Context, refreshToken string) *response.APIError
 }

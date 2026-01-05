@@ -167,8 +167,8 @@ func (uc *authUsecase) Login(ctx context.Context, req *dto.LoginRequest) (*dto.T
 	}, nil
 }
 
-func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*dto.TokenResponse, *response.APIError) {
-	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
+func (uc *authUsecase) Refresh(ctx context.Context, refreshToken string) (*dto.TokenResponse, *response.APIError) {
+	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
 	var userID string
 	if err := uc.cache.Get(ctx, cacheKey, &userID); err != nil {
 		return nil, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya")
@@ -204,8 +204,8 @@ func (uc *authUsecase) Refresh(ctx context.Context, req *dto.RefreshRequest) (*d
 	}, nil
 }
 
-func (uc *authUsecase) Logout(ctx context.Context, req *dto.LogoutRequest) *response.APIError {
-	cacheKey := fmt.Sprintf("refresh:%s", req.RefreshToken)
+func (uc *authUsecase) Logout(ctx context.Context, refreshToken string) *response.APIError {
+	cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
 	if err := uc.cache.Del(ctx, cacheKey); err != nil {
 		slog.Error("failed to delete refresh token", "error", err)
 		return response.ErrInternal("Coba lagi nanti ya!")

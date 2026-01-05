@@ -15,15 +15,7 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required,min=8,max=255"`
 }
 
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
-type LogoutRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"-"`
 }
