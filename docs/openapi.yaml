@@ -107,31 +107,12 @@ components:
           type: string
           example: "Str0ngP@ssw0rD"
 
-    RefreshRequest:
-      type: object
-      required:
-        - refresh_token
-      properties:
-        refresh_token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsIn..."
-
-    LogoutRequest:
-      type: object
-      required:
-        - refresh_token
-      properties:
-        refresh_token:
-          type: string
-          example: "eyJhbGciOiJIUzI1NiIsIn..."
-
     TokenResponse:
       type: object
       properties:
         access_token:
           type: string
-        refresh_token:
-          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
     # story schemas
     StoryActionRequest:
@@ -747,42 +728,22 @@ components:
               status: 500
 
     # /auth/refresh errors
-    ErrRefreshBadRequest:
-      description: Bad request - Failed to parse request body
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error:
-              type: "bad_request"
-              message: "Data yang dikirimkan salah"
-              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
-              status: 400
-
-    ErrRefreshValidation:
-      description: Validation error - Invalid input fields
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error:
-              type: "validation_error"
-              message: "Ups, ada data yang ga sesuai nih"
-              status: 422
-              fields:
-                refresh_token: "required"
-
     ErrRefreshUnauthorized:
-      description: Unauthorized - Multiple scenarios (invalid/expired token, user not found)
+      description: Unauthorized - Multiple scenarios (no cookie, invalid/expired token, user not found)
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
           examples:
+            noCookie:
+              summary: Refresh token cookie not found
+              value:
+                success: false
+                error:
+                  type: "unauthorized"
+                  message: "Kamu belum login, yuk login dulu"
+                  detail: "Sesi kamu udah habis, coba login lagi ya"
+                  status: 401
             invalidToken:
               summary: Invalid or expired refresh token
               value:
@@ -817,8 +778,8 @@ components:
               status: 500
 
     # /auth/logout errors
-    ErrLogoutBadRequest:
-      description: Bad request - Failed to parse request body
+    ErrLogoutUnauthorized:
+      description: Unauthorized - Refresh token cookie not found
       content:
         application/json:
           schema:
@@ -826,25 +787,10 @@ components:
           example:
             success: false
             error:
-              type: "bad_request"
-              message: "Data yang dikirimkan salah"
-              detail: "Data yang kamu kirim belum pas, coba cek lagi ya"
-              status: 400
-
-    ErrLogoutValidation:
-      description: Validation error - Invalid input fields
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-          example:
-            success: false
-            error:
-              type: "validation_error"
-              message: "Ups, ada data yang ga sesuai nih"
-              status: 422
-              fields:
-                refresh_token: "required"
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Sesi kamu udah habis, coba login lagi ya"
+              status: 401
 
     ErrLogoutInternal:
       description: Internal server error
@@ -1494,7 +1440,10 @@ paths:
       tags:
         - Auth
       summary: Login User
-      description: Authenticate user and receive access and refresh tokens.
+      description: |
+        Authenticate user and receive access token.
+        - Access token returned in response body
+        - Refresh token stored in HTTP-only cookie
       requestBody:
         required: true
         content:
@@ -1504,6 +1453,12 @@ paths:
       responses:
         "200":
           description: OK - Login successful
+          headers:
+            Set-Cookie:
+              description: Refresh token stored in HTTP-only cookie
+              schema:
+                type: string
+                example: "refresh_token=eyJhbGciOiJIUzI1NiIsIn...; Path=/; Max-Age=604800; HttpOnly; Secure; SameSite=Lax"
           content:
             application/json:
               schema:
@@ -1514,7 +1469,11 @@ paths:
                       message:
                         example: "Login sukses! Yuk mulai eksplorasi!"
                       data:
-                        $ref: "#/components/schemas/TokenResponse"
+                        type: object
+                        properties:
+                          access_token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "400":
           $ref: "#/components/responses/ErrLoginBadRequest"
         "422":
@@ -1529,16 +1488,28 @@ paths:
       tags:
         - Auth
       summary: Refresh Access Token
-      description: Refresh expired access token using refresh token. Returns new access and refresh tokens.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshRequest"
+      description: |
+        Refresh expired access token using refresh token.
+        - Reads refresh token from HTTP-only cookie
+        - Returns new access token in response body
+        - Updates refresh token in cookie
+      parameters:
+        - name: Cookie
+          in: header
+          description: Refresh token from HTTP-only cookie
+          required: true
+          schema:
+            type: string
+            example: "refresh_token=eyJhbGciOiJIUzI1NiIsIn..."
       responses:
         "200":
           description: OK - Token refresh successful
+          headers:
+            Set-Cookie:
+              description: New refresh token stored in HTTP-only cookie
+              schema:
+                type: string
+                example: "refresh_token=eyJhbGciOiJIUzI1NiIsIn...; Path=/; Max-Age=604800; HttpOnly; Secure; SameSite=Lax"
           content:
             application/json:
               schema:
@@ -1549,11 +1520,11 @@ paths:
                       message:
                         example: "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!"
                       data:
-                        $ref: "#/components/schemas/TokenResponse"
-        "400":
-          $ref: "#/components/responses/ErrRefreshBadRequest"
-        "422":
-          $ref: "#/components/responses/ErrRefreshValidation"
+                        type: object
+                        properties:
+                          access_token:
+                            type: string
+                            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "401":
           $ref: "#/components/responses/ErrRefreshUnauthorized"
         "500":
@@ -1564,16 +1535,24 @@ paths:
       tags:
         - Auth
       summary: Logout User
-      description: Logout user by invalidating the refresh token.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LogoutRequest"
+      description: Logout user by invalidating the refresh token and clearing cookie.
+      parameters:
+        - name: Cookie
+          in: header
+          description: Refresh token from HTTP-only cookie
+          required: true
+          schema:
+            type: string
+            example: "refresh_token=eyJhbGciOiJIUzI1NiIsIn..."
       responses:
         "200":
           description: OK - Logout successful
+          headers:
+            Set-Cookie:
+              description: Refresh token cookie cleared
+              schema:
+                type: string
+                example: "refresh_token=; Path=/; Max-Age=-1; HttpOnly; Secure; SameSite=Lax"
           content:
             application/json:
               schema:
@@ -1586,10 +1565,8 @@ paths:
                       data:
                         type: "null"
                         example: null
-        "400":
-          $ref: "#/components/responses/ErrLogoutBadRequest"
-        "422":
-          $ref: "#/components/responses/ErrLogoutValidation"
+        "401":
+          $ref: "#/components/responses/ErrLogoutUnauthorized"
         "500":
           $ref: "#/components/responses/ErrLogoutInternal"
 
