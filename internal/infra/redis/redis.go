@@ -15,6 +15,10 @@ type RedisItf interface {
 	Set(ctx context.Context, key string, val any, exp time.Duration) error
 	Get(ctx context.Context, key string, val any) error
 	Del(ctx context.Context, key string) error
+	ZAdd(ctx context.Context, key string, score float64, member string) error
+	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ([]r.Z, error)
+	ZRevRank(ctx context.Context, key string, member string) (int64, error)
+	ZScore(ctx context.Context, key string, member string) (float64, error)
 	Close() error
 }
 
@@ -57,6 +61,33 @@ func (rd *redis) Get(ctx context.Context, key string, val any) error {
 
 func (rd *redis) Del(ctx context.Context, key string) error {
 	return rd.client.Del(ctx, key).Err()
+}
+
+func (rd *redis) ZAdd(ctx context.Context, key string, score float64, member string) error {
+	return rd.client.ZAdd(ctx, key, r.Z{
+		Score:  score,
+		Member: member,
+	}).Err()
+}
+
+func (rd *redis) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ([]r.Z, error) {
+	return rd.client.ZRevRangeWithScores(ctx, key, start, stop).Result()
+}
+
+func (rd *redis) ZRevRank(ctx context.Context, key string, member string) (int64, error) {
+	rank, err := rd.client.ZRevRank(ctx, key, member).Result()
+	if errors.Is(err, r.Nil) {
+		return -1, nil // user not in leaderboard yet
+	}
+	return rank, err
+}
+
+func (rd *redis) ZScore(ctx context.Context, key string, member string) (float64, error) {
+	score, err := rd.client.ZScore(ctx, key, member).Result()
+	if errors.Is(err, r.Nil) {
+		return 0, nil
+	}
+	return score, err
 }
 
 func (rd *redis) Close() error {

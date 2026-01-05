@@ -17,15 +17,17 @@ type userUsecase struct {
 	userRepo  contract.UserRepositoryItf
 	storyRepo contract.StoryRepositoryItf
 	dictRepo  contract.DictionaryRepositoryItf
+	lbRepo    contract.LeaderboardRepositoryItf
 	storage   minio.MinioItf
 	env       *config.Env
 }
 
-func NewUserUsecase(userRepo contract.UserRepositoryItf, storyRepo contract.StoryRepositoryItf, dictRepo contract.DictionaryRepositoryItf, storage minio.MinioItf, env *config.Env) contract.UserUsecaseItf {
+func NewUserUsecase(userRepo contract.UserRepositoryItf, storyRepo contract.StoryRepositoryItf, dictRepo contract.DictionaryRepositoryItf, lbRepo contract.LeaderboardRepositoryItf, storage minio.MinioItf, env *config.Env) contract.UserUsecaseItf {
 	return &userUsecase{
 		userRepo:  userRepo,
 		storyRepo: storyRepo,
 		dictRepo:  dictRepo,
+		lbRepo:    lbRepo,
 		storage:   storage,
 		env:       env,
 	}
@@ -68,6 +70,17 @@ func (uc *userUsecase) GetUserProfile(ctx context.Context, userID uuid.UUID) (*d
 		})
 	}
 
+	var lbInfo *dto.UserLeaderboardInfoResponse
+	rank, score, err := uc.lbRepo.GetUserRank(ctx, userID)
+	if err != nil {
+		slog.Error("failed to get user rank", "error", err)
+	} else if rank > 0 {
+		lbInfo = &dto.UserLeaderboardInfoResponse{
+			Rank:  rank,
+			Score: score,
+		}
+	}
+
 	return &dto.UserProfileResponse{
 		ID:           user.ID,
 		Username:     user.Username,
@@ -81,7 +94,8 @@ func (uc *userUsecase) GetUserProfile(ctx context.Context, userID uuid.UUID) (*d
 			TotalVocabs:       totalVocabs,
 			CollectedVocabs:   user.TotalWordsCollected,
 		},
-		Badges: badgeResponses,
+		Badges:          badgeResponses,
+		LeaderboardInfo: lbInfo,
 	}, nil
 }
 

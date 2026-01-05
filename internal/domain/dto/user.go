@@ -25,12 +25,18 @@ type UserStatsResponse struct {
 	CollectedVocabs   int     `json:"collected_vocabs"`
 }
 
+type UserLeaderboardInfoResponse struct {
+	Rank  int `json:"rank"`
+	Score int `json:"score"`
+}
+
 type UserProfileResponse struct {
-	ID           uuid.UUID           `json:"id"`
-	Username     string              `json:"username"`
-	Email        string              `json:"email"`
-	AvatarURL    string              `json:"avatar_url"`
-	CurrentTitle string              `json:"current_title"`
-	Stats        UserStatsResponse   `json:"stats"`
-	Badges       []UserBadgeResponse `json:"badges"`
+	ID              uuid.UUID                    `json:"id"`
+	Username        string                       `json:"username"`
+	Email           string                       `json:"email"`
+	AvatarURL       string                       `json:"avatar_url"`
+	CurrentTitle    string                       `json:"current_title"`
+	Stats           UserStatsResponse            `json:"stats"`
+	Badges          []UserBadgeResponse          `json:"badges"`
+	LeaderboardInfo *UserLeaderboardInfoResponse `json:"leaderboard_info"`
 }

@@ -34,6 +34,10 @@ import (
 	dictHdl "github.com/Ablebil/lathi-be/internal/app/dictionary/handler"
 	dictRepo "github.com/Ablebil/lathi-be/internal/app/dictionary/repository"
 	dictUc "github.com/Ablebil/lathi-be/internal/app/dictionary/usecase"
+
+	lbHdl "github.com/Ablebil/lathi-be/internal/app/leaderboard/handler"
+	lbRepo "github.com/Ablebil/lathi-be/internal/app/leaderboard/repository"
+	lbUc "github.com/Ablebil/lathi-be/internal/app/leaderboard/usecase"
 )
 
 func Start() error {
@@ -70,9 +74,14 @@ func Start() error {
 	authUsecase := authUc.NewAuthUsecase(userRepository, bcrypt, mail, cache, jwt, env)
 	authHdl.NewAuthHandler(v1, val, authUsecase)
 
+	// leaderboard module
+	leaderboardRepository := lbRepo.NewLeaderboardRepository(db, cache)
+	leaderboardUsecase := lbUc.NewLeaderboardUsecase(leaderboardRepository, storage)
+	lbHdl.NewLeaderboardHandler(v1, leaderboardUsecase)
+
 	// story module
 	storyRepository := storyRepo.NewStoryRepository(db)
-	storyUsecase := storyUc.NewStoryUsecase(storyRepository, userRepository, storage, env)
+	storyUsecase := storyUc.NewStoryUsecase(storyRepository, userRepository, leaderboardRepository, storage, env)
 	storyHdl.NewStoryHandler(v1, val, mw, storyUsecase)
 
 	// dictionary module
@@ -81,10 +90,10 @@ func Start() error {
 	dictHdl.NewDictionaryHandler(v1, val, mw, dictionaryUsecase)
 
 	// user module
-	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, storage, env)
+	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, leaderboardRepository, storage, env)
 	userHdl.NewUserHandler(v1, val, mw, userUsecase)
 
-	cron := cronJob.NewCronJob(userRepository)
+	cron := cronJob.NewCronJob(userRepository, leaderboardRepository)
 	cron.Start()
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))

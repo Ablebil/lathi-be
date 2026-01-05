@@ -21,14 +21,16 @@ import (
 type storyUsecase struct {
 	storyRepo contract.StoryRepositoryItf
 	userRepo  contract.UserRepositoryItf
+	lbRepo    contract.LeaderboardRepositoryItf
 	storage   minio.MinioItf
 	env       *config.Env
 }
 
-func NewStoryUsecase(storyRepo contract.StoryRepositoryItf, userRepo contract.UserRepositoryItf, storage minio.MinioItf, env *config.Env) contract.StoryUsecaseItf {
+func NewStoryUsecase(storyRepo contract.StoryRepositoryItf, userRepo contract.UserRepositoryItf, lbRepo contract.LeaderboardRepositoryItf, storage minio.MinioItf, env *config.Env) contract.StoryUsecaseItf {
 	return &storyUsecase{
 		storyRepo: storyRepo,
 		userRepo:  userRepo,
+		lbRepo:    lbRepo,
 		storage:   storage,
 		env:       env,
 	}
@@ -334,6 +336,8 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 					_ = uc.userRepo.UpdateUserTitle(ctx, userID, newTitle)
 				}
 
+				_ = uc.lbRepo.UpdateUserScore(ctx, userID)
+
 				// badge 1
 				if chapter.OrderIndex == 1 {
 					_ = uc.userRepo.AssignBadge(ctx, userID, "ch1_completion")
@@ -368,6 +372,7 @@ func (uc *storyUsecase) SubmitAction(ctx context.Context, userID uuid.UUID, req 
 			slog.Error("failed to unlock vocabs", "error", err)
 		} else if newWordsCount > 0 {
 			_ = uc.userRepo.IncrementUserWordCount(ctx, userID, int(newWordsCount))
+			_ = uc.lbRepo.UpdateUserScore(ctx, userID)
 
 			user, err := uc.userRepo.GetUserByID(ctx, userID)
 			if err == nil && user != nil {
