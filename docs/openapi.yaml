@@ -478,6 +478,50 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserBadgeResponse"
+        leaderboard_info:
+          oneOf:
+            - $ref: "#/components/schemas/UserLeaderboardInfoResponse"
+            - type: "null"
+
+    # leaderboard schemas
+    UserLeaderboardInfoResponse:
+      type: object
+      properties:
+        rank:
+          type: integer
+          example: 3
+        score:
+          type: integer
+          example: 450
+
+    LeaderboardItemResponse:
+      type: object
+      properties:
+        rank:
+          type: integer
+          example: 1
+        user_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        username:
+          type: string
+          example: "valen"
+        title:
+          type: string
+          enum: ["cantrik", "abdi", "priyayi"]
+          example: "priyayi"
+        score:
+          type: integer
+          example: 1040
+
+    LeaderboardResponse:
+      type: object
+      properties:
+        top_users:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardItemResponse"
 
   responses:
     # /auth/register errors
@@ -1344,6 +1388,21 @@ components:
               detail: "Coba lagi nanti ya!"
               status: 500
 
+    # /leaderboards errors
+    ErrLeaderboardInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
 tags:
   - name: Auth
     description: Authentication endpoints
@@ -1353,6 +1412,8 @@ tags:
     description: Dictionary and vocabulary endpoints
   - name: User
     description: User profile management endpoints
+  - name: Leaderboard
+    description: Leaderboard and ranking endpoints
 
 paths:
   # auth endpoints
@@ -1987,6 +2048,9 @@ paths:
                       description: "Bausastra ing sirah saya akeh. Bekal wicara supaya ora kleru."
                       icon_url: "https://storage.lathi.id/badges/vocab_collector_1.webp"
                       earned_at: "2024-01-16T14:20:00Z"
+                  leaderboard_info:
+                    rank: 3
+                    score: 52
         "401":
           $ref: "#/components/responses/ErrGetProfileUnauthorized"
         "404":
@@ -2041,6 +2105,9 @@ paths:
                       description: "Langkah kapisan wis dilakoni. Wani miwiti, wani mungkasi."
                       icon_url: "https://storage.lathi.id/badges/satriya_anyar.webp"
                       earned_at: "2024-01-15T10:30:00Z"
+                  leaderboard_info:
+                    rank: 3
+                    score: 52
         "400":
           $ref: "#/components/responses/ErrEditProfileBadRequest"
         "422":
@@ -2051,3 +2118,57 @@ paths:
           $ref: "#/components/responses/ErrEditProfileConflict"
         "500":
           $ref: "#/components/responses/ErrEditProfileInternal"
+
+  # leaderboard endpoints
+  /leaderboards:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get Global Leaderboard
+      description: Get top 5 users in the global leaderboard. No authentication required.
+      responses:
+        "200":
+          description: OK - Leaderboard retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      message:
+                        example: "Leaderboard berhasil dimuat"
+                      data:
+                        $ref: "#/components/schemas/LeaderboardResponse"
+              example:
+                success: true
+                message: "Leaderboard berhasil dimuat"
+                data:
+                  top_users:
+                    - rank: 1
+                      user_id: "550e8400-e29b-41d4-a716-446655440000"
+                      username: "valen"
+                      title: "priyayi"
+                      score: 1040
+                    - rank: 2
+                      user_id: "550e8400-e29b-41d4-a716-446655440001"
+                      username: "soma"
+                      title: "abdi"
+                      score: 520
+                    - rank: 3
+                      user_id: "550e8400-e29b-41d4-a716-446655440002"
+                      username: "sari"
+                      title: "cantrik"
+                      score: 220
+                    - rank: 4
+                      user_id: "550e8400-e29b-41d4-a716-446655440003"
+                      username: "laras"
+                      title: "cantrik"
+                      score: 250
+                    - rank: 5
+                      user_id: "550e8400-e29b-41d4-a716-446655440004"
+                      username: "budi"
+                      title: "cantrik"
+                      score: 0
+        "500":
+          $ref: "#/components/responses/ErrLeaderboardInternal"
