@@ -133,3 +133,16 @@ func (r *userRepository) AssignBadge(ctx context.Context, userID uuid.UUID, badg
 		DoNothing: true,
 	}).Create(&userBadge).Error
 }
+
+func (r *userRepository) DeleteUnverifiedUsers(ctx context.Context, threshold time.Time) (int64, error) {
+	result := r.db.WithContext(ctx).
+		Where("is_verified = ?", false).
+		Where("created_at < ?", threshold).
+		Delete(&entity.User{})
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}

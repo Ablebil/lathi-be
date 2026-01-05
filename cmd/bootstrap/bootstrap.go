@@ -9,6 +9,7 @@ import (
 	"github.com/Ablebil/lathi-be/db/migration"
 	"github.com/Ablebil/lathi-be/db/seed"
 	"github.com/Ablebil/lathi-be/internal/config"
+	cronJob "github.com/Ablebil/lathi-be/internal/infra/cron"
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
 	"github.com/Ablebil/lathi-be/internal/infra/postgresql"
@@ -82,6 +83,9 @@ func Start() error {
 	// user module
 	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, storage, env)
 	userHdl.NewUserHandler(v1, val, mw, userUsecase)
+
+	cron := cronJob.NewCronJob(userRepository)
+	cron.Start()
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
 }

@@ -2,6 +2,7 @@ package contract
 
 import (
 	"context"
+	"time"
 
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/domain/entity"
@@ -26,4 +27,5 @@ type UserRepositoryItf interface {
 	IncrementUserWordCount(ctx context.Context, userID uuid.UUID, amount int) error
 	UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error
 	AssignBadge(ctx context.Context, userID uuid.UUID, badgeCode string) error
+	DeleteUnverifiedUsers(ctx context.Context, threshold time.Time) (int64, error)
 }
