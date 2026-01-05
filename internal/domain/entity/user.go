@@ -20,6 +20,7 @@ type User struct {
 	Username             string    `json:"username" gorm:"type:varchar(50);unique;not null"`
 	Email                string    `json:"email" gorm:"type:varchar(255);unique;not null"`
 	Password             string    `json:"password" gorm:"type:varchar(255);not null"`
+	AvatarURL            string    `json:"avatar_url" gorm:"type:varchar(255);not null"`
 	CurrentTitle         Title     `json:"current_title" gorm:"type:varchar(255);default:'cantrik';not null"`
 	LastChapterCompleted int       `json:"last_chapter_completed" gorm:"type:int;default:0;not null"`
 	TotalWordsCollected  int       `json:"total_words_collected" gorm:"type:int;default:0;not null"`

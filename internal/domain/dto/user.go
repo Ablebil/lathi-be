@@ -25,6 +25,7 @@ type UserProfileResponse struct {
 	ID           uuid.UUID           `json:"id"`
 	Username     string              `json:"username"`
 	Email        string              `json:"email"`
+	AvatarURL    string              `json:"avatar_url"`
 	CurrentTitle string              `json:"current_title"`
 	Stats        UserStatsResponse   `json:"stats"`
 	Badges       []UserBadgeResponse `json:"badges"`

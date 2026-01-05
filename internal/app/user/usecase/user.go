@@ -72,6 +72,7 @@ func (uc *userUsecase) GetUserProfile(ctx context.Context, userID uuid.UUID) (*d
 		ID:           user.ID,
 		Username:     user.Username,
 		Email:        user.Email,
+		AvatarURL:    uc.storage.GetObjectURL(user.AvatarURL),
 		CurrentTitle: string(user.CurrentTitle),
 		Stats: dto.UserStatsResponse{
 			TotalChapters:     totalChapters,

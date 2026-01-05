@@ -39,6 +39,7 @@ type Env struct {
 	StorageBucket    string        `mapstructure:"STORAGE_BUCKET"`
 	DefaultPageLimit int           `mapstructure:"DEFAULT_PAGE_LIMIT"`
 	MaxPageLimit     int           `mapstructure:"MAX_PAGE_LIMIT"`
+	DefaultAvatarURL string        `mapstructure:"DEFAULT_AVATAR_URL"`
 }
 
 func New() (*Env, error) {

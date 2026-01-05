@@ -22,6 +22,8 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 		return err
 	}
 
+	avatarURL := "avatars/default.webp"
+
 	var badges []entity.Badge
 	if err := db.Find(&badges).Error; err != nil {
 		return err
@@ -37,6 +39,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			Username:             "valen",
 			Email:                "valen@lathi.id",
 			Password:             password,
+			AvatarURL:            avatarURL,
 			IsVerified:           true,
 			CurrentTitle:         entity.Priyayi,
 			LastChapterCompleted: 4,
@@ -47,6 +50,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			Username:             "soma",
 			Email:                "soma@lathi.id",
 			Password:             password,
+			AvatarURL:            avatarURL,
 			IsVerified:           true,
 			CurrentTitle:         entity.Abdi,
 			LastChapterCompleted: 2,
@@ -57,6 +61,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			Username:             "laras",
 			Email:                "laras@lathi.id",
 			Password:             password,
+			AvatarURL:            avatarURL,
 			IsVerified:           true,
 			CurrentTitle:         entity.Cantrik,
 			LastChapterCompleted: 1,
@@ -67,6 +72,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			Username:             "budi",
 			Email:                "budi@lathi.id",
 			Password:             password,
+			AvatarURL:            avatarURL,
 			IsVerified:           true,
 			CurrentTitle:         entity.Cantrik,
 			LastChapterCompleted: 0,
@@ -77,6 +83,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			Username:             "sari",
 			Email:                "sari@lathi.id",
 			Password:             password,
+			AvatarURL:            avatarURL,
 			IsVerified:           true,
 			CurrentTitle:         entity.Cantrik,
 			LastChapterCompleted: 1,

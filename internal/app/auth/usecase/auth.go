@@ -55,9 +55,10 @@ func (uc *authUsecase) Register(ctx context.Context, req *dto.RegisterRequest) *
 	}
 
 	newUser := &entity.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: hashed,
+		Username:  req.Username,
+		Email:     req.Email,
+		Password:  hashed,
+		AvatarURL: uc.env.DefaultAvatarURL,
 	}
 	if err := uc.repo.CreateUser(ctx, newUser); err != nil {
 		slog.Error("failed to create user", "error", err)
