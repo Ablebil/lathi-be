@@ -72,7 +72,7 @@ func Start() error {
 	// auth module
 	userRepository := userRepo.NewUserRepository(db)
 	authUsecase := authUc.NewAuthUsecase(userRepository, bcrypt, mail, cache, jwt, env)
-	authHdl.NewAuthHandler(v1, val, authUsecase)
+	authHdl.NewAuthHandler(v1, val, env, authUsecase)
 
 	// leaderboard module
 	leaderboardRepository := lbRepo.NewLeaderboardRepository(db, cache)

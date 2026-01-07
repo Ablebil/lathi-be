@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/pkg/response"
@@ -10,12 +11,14 @@ import (
 
 type authHandler struct {
 	val validator.ValidatorItf
+	env *config.Env
 	uc  contract.AuthUsecaseItf
 }
 
-func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, authUc contract.AuthUsecaseItf) {
+func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, env *config.Env, authUc contract.AuthUsecaseItf) {
 	handler := authHandler{
 		val: validator,
+		env: env,
 		uc:  authUc,
 	}
 
@@ -83,7 +86,12 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		MaxAge:   int(7 * 24 * 60 * 60),
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax",
+		SameSite: func() string {
+			if h.env.AppEnv == "production" {
+				return fiber.CookieSameSiteLaxMode
+			}
+			return fiber.CookieSameSiteNoneMode
+		}(),
 	})
 
 	return response.Success(ctx, fiber.StatusOK, "Login sukses! Yuk mulai eksplorasi!", map[string]string{
@@ -109,7 +117,12 @@ func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 		MaxAge:   int(7 * 24 * 60 * 60),
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax",
+		SameSite: func() string {
+			if h.env.AppEnv == "production" {
+				return fiber.CookieSameSiteLaxMode
+			}
+			return fiber.CookieSameSiteNoneMode
+		}(),
 	})
 
 	return response.Success(ctx, fiber.StatusOK, "Sesi kamu udah diperbarui, yuk lanjut eksplorasi!", map[string]string{
@@ -134,7 +147,12 @@ func (h *authHandler) logout(ctx *fiber.Ctx) error {
 		MaxAge:   -1,
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: "Lax",
+		SameSite: func() string {
+			if h.env.AppEnv == "production" {
+				return fiber.CookieSameSiteLaxMode
+			}
+			return fiber.CookieSameSiteNoneMode
+		}(),
 	})
 
 	return response.Success(ctx, fiber.StatusOK, "Logout berhasil, sampai jumpa lagi!", nil)
