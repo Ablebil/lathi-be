@@ -158,7 +158,7 @@ func seedChapter2(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 				{Text: "{Dalem} asli {lare} Suroboyo, Pak.", NextSlideKey: "28b", MoodImpact: 1},
 				{Text: "Omahku Surabaya, Pak.", NextSlideKey: "28c", MoodImpact: -1},
 			},
-			VocabKeys: []string{"saking", "lare", "griya"},
+			VocabKeys: []string{"saking", "dalem", "lare"},
 		},
 
 		// branch choice 6

@@ -36,8 +36,8 @@ func seedChapter3(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 
 	slidesData := []slideData{
 		// intro
-		{Key: "1", Speaker: "Narator", BgImg: "bg/toko_batik.webp", Content: "Pakdhe Joyo ngutus Andi tumuju dhateng Pasar Besar. Ananging, papan ingkang dipuntuju sanes toko sembarangan.", NextSlideKey: "2", VocabKeys: []string{"sowan"}},
-		{Key: "2", Speaker: "Narator", BgImg: "bg/toko_batik.webp", Content: "Toko {menika} namanipun 'Batik Lestari', {kagunganipun} Bu Tejo. Piyantun Solo ingkang sampun dangu {wonten} Surabaya, nanging kenceng anggenipun ngugemi tata krama.", NextSlideKey: "3", VocabKeys: []string{"menika", "kagungan", "wonten"}},
+		{Key: "1", Speaker: "Narator", BgImg: "bg/toko_batik.webp", Content: "Pakdhe Joyo ngutus Andi tumuju dhateng Pasar Besar. Ananging, papan ingkang dipuntuju sanes toko sembarangan.", NextSlideKey: "2"},
+		{Key: "2", Speaker: "Narator", BgImg: "bg/toko_batik.webp", Content: "Toko {menika} namanipun 'Batik Lestari', {kagungan}ipun Bu Tejo. Piyantun Solo ingkang sampun dangu {wonten} Surabaya, nanging kenceng anggenipun ngugemi tata krama.", NextSlideKey: "3", VocabKeys: []string{"menika", "kagungan", "wonten"}},
 		{Key: "3", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("nervous")}, Content: "(Mandheg ngarep toko sing akeh hiasan wayang lan kain jarik) (_Waduh, ambune dupa menyan. Iki toko batik apa dukun? Pakdhe Joyo pancen aneh-aneh wae._)", NextSlideKey: "4"},
 		{Key: "4", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral")}, Content: "(Mlebu toko, Bu Tejo lagi sibuk ngetung duit neng kalkulator, ora noleh) ...", NextSlideKey: "5"},
 
@@ -114,10 +114,10 @@ func seedChapter3(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 		{Key: "22c", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "'Purun'? Inggih monggo. Basa {sampeyan} lucu, kaku kaya Londo sinau Jawa.", NextSlideKey: "23", VocabKeys: []string{"sampeyan"}},
 
 		// merge path
-		{Key: "23", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Niki {reginipun} {pinten} Bu?", NextSlideKey: "24", VocabKeys: []string{"regi", "pinten"}},
+		{Key: "23", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Niki {regi}nipun {pinten} Bu?", NextSlideKey: "24", VocabKeys: []string{"regi", "pinten"}},
 		{Key: "24", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Murah. Gawe awakmu sing ganteng, 350 {ewu} wae.", NextSlideKey: "25", VocabKeys: []string{"ewu"}},
 		{Key: "25", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("nervous"), butejo("neutral")}, Content: "(_Mak glodhak! 350 {ewu}? Iso ora mangan seminggu aku iki._)", NextSlideKey: "26", VocabKeys: []string{"ewu"}},
-		{Key: "26", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("nervous"), butejo("neutral")}, Content: "Waduh Bu... Kok {awis} sanget? {Kula} niki nembe merintis usaha. Lho, rega nggawa rupa Mas. Tapi yowes, tawarana. Tak rungokne.", NextSlideKey: "27", VocabKeys: []string{"awis", "kula"}},
+		{Key: "26", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("nervous"), butejo("neutral")}, Content: "Waduh Bu... Kok {awis} sanget? {Kula} niki nembe merintis usaha", NextSlideKey: "27", VocabKeys: []string{"awis", "kula"}},
 
 		// choice 4
 		{
@@ -177,11 +177,11 @@ func seedChapter3(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 		{Key: "36c", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("nervous"), butejo("neutral")}, Content: "Telu {atus}? Basa {pundi} menika Mas? Ingkang leres {Tiga} {Atus}.", NextSlideKey: "37", VocabKeys: []string{"pundi", "tiga", "atus"}},
 
 		// merge path
-		{Key: "37", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Niki {artanipun}, Bu. Pas nggih.", NextSlideKey: "38", VocabKeys: []string{"arta"}},
+		{Key: "37", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Niki {arta}nipun, Bu. Pas nggih.", NextSlideKey: "38", VocabKeys: []string{"arta"}},
 		{Key: "38", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Matur nuwun. Eh Mas, kok {sampeyan} getol banget sinau Basa? Padahal arek Suroboyo.", NextSlideKey: "39", VocabKeys: []string{"sampeyan"}},
 		{Key: "39", Speaker: "Andi", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("happy"), butejo("happy")}, Content: "Inggih Bu. Demi calon mertua, {kula} purun sinau. Piyantunipun Priyayi Sepuh soalipun.", NextSlideKey: "40", VocabKeys: []string{"kula"}},
 		{Key: "40", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("happy"), butejo("happy")}, Content: "Apik. Mas, tak kandhani ya. Aku iki wis dodolan batik puluhan taun. Wis apal watake wong Jawa, utamane Priyayi.", NextSlideKey: "41"},
-		{Key: "41", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "{Sampeyan} nek ngadepi Priyayi sepuh, kuncine mung {setunggal}. Napa niku Bu? {Kula} butuh contekan.", NextSlideKey: "42", VocabKeys: []string{"sampeyan", "setunggal", "kula"}},
+		{Key: "41", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "{Sampeyan} nek ngadepi Priyayi sepuh, kuncine mung {setunggal}.", NextSlideKey: "42", VocabKeys: []string{"sampeyan", "setunggal", "kula"}},
 
 		// choice 7
 		{
@@ -189,14 +189,14 @@ func seedChapter3(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 			Content: "{Kula} butuh contekan.",
 			Choices: []choiceSeedData{
 				{Text: "Bapak senengane opo?", NextSlideKey: "43a", MoodImpact: 0},
-				{Text: "{Kersanipun} Bapak {menika} kados pundi?", NextSlideKey: "43b", MoodImpact: 1},
+				{Text: "{Kersa}nipun Bapak {menika} kados pundi?", NextSlideKey: "43b", MoodImpact: 1},
 				{Text: "Bapak {remenipun} napa?", NextSlideKey: "43c", MoodImpact: 0},
 			},
 			VocabKeys: []string{"kula", "kersa", "menika", "remen"},
 		},
 
 		// branch choice 7
-		{Key: "43a", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Duh, basamu lho Mas. Isih pating pecotot. '{Kersanipun}' ngono lho.", NextSlideKey: "44", VocabKeys: []string{"kersa"}},
+		{Key: "43a", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "Duh, basamu lho Mas. Isih pating pecotot. '{Kersa}nipun' ngono lho.", NextSlideKey: "44", VocabKeys: []string{"kersa"}},
 		{Key: "43b", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("happy"), butejo("happy")}, Content: "Nah, pinter. Priyayi iku seneng wong sing 'Genah'. Nek ditakoni, jawabe sing mantep. Aja plin-plan.", NextSlideKey: "44"},
 		{Key: "43c", Speaker: "Bu Tejo", BgImg: "bg/toko_batik.webp", Characters: []charData{andi("neutral"), butejo("neutral")}, Content: "'{Remenipun}' wis bener, tapi kurang alus {sakedhik} nek kangge Priyayi sepuh.", NextSlideKey: "44", VocabKeys: []string{"remen", "sakedhik"}},
 

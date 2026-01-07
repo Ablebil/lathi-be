@@ -89,7 +89,7 @@ func seedChapter4(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 
 		// merge path
 		{Key: "15", Speaker: "Pak Broto", BgImg: "bg/ruang_tamu_pak_broto.webp", Characters: []charData{andi("neutral"), pakbroto("neutral")}, Content: "Dadi... iki sing jenenge Andi?", NextSlideKey: "16"},
-		{Key: "16", Speaker: "Andi", BgImg: "bg/ruang_tamu_pak_broto.webp", Characters: []charData{andi("neutral"), pakbroto("neutral")}, Content: "Inggih Pak, {leres}. {Kula} Andi.", NextSlideKey: "17", VocabKeys: []string{"kula", "leres"}},
+		{Key: "16", Speaker: "Andi", BgImg: "bg/ruang_tamu_pak_broto.webp", Characters: []charData{andi("neutral"), pakbroto("neutral")}, Content: "Inggih Pak, {leres}. {Kula} Andi.", NextSlideKey: "17", VocabKeys: []string{"leres", "kula"}},
 		{Key: "17", Speaker: "Pak Broto", BgImg: "bg/ruang_tamu_pak_broto.webp", Characters: []charData{andi("neutral"), pakbroto("neutral")}, Content: "Bakul mie? (Nadane datar, ora ngenyek tapi ngetes mental).", NextSlideKey: "18"},
 
 		// choice 3
@@ -120,7 +120,7 @@ func seedChapter4(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 				{Text: "{Kula} janji {badhe} ngebahagiakne Sekar.", NextSlideKey: "22b", MoodImpact: 0},
 				{Text: "Insyaallah {cekap} Pak. {Kula} {badhe} ikhtiar.", NextSlideKey: "22c", MoodImpact: 1},
 			},
-			VocabKeys: []string{"kula", "cekap", "badhe"},
+			VocabKeys: []string{"kula", "badhe", "cekap"},
 		},
 
 		// branch choice 4
