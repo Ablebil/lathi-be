@@ -90,7 +90,7 @@ func Start() error {
 	dictHdl.NewDictionaryHandler(v1, val, mw, dictionaryUsecase)
 
 	// user module
-	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, leaderboardRepository, storage, env)
+	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, leaderboardRepository, storage, cache, env)
 	userHdl.NewUserHandler(v1, val, mw, userUsecase)
 
 	cron := cronJob.NewCronJob(userRepository, leaderboardRepository)

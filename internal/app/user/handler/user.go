@@ -24,6 +24,7 @@ func NewUserHandler(router fiber.Router, validator validator.ValidatorItf, mw mi
 	userRouter := router.Group("/users", mw.Authenticate)
 	userRouter.Get("/profile", handler.getProfile)
 	userRouter.Patch("/profile", handler.editProfile)
+	userRouter.Delete("/account", handler.deleteAccount)
 }
 
 func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
@@ -63,4 +64,30 @@ func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Profilmu berhasil diperbarui", resp)
+}
+
+func (h *userHandler) deleteAccount(ctx *fiber.Ctx) error {
+	userIDStr, ok := ctx.Locals("user_id").(string)
+	if !ok {
+		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
+	}
+	userID, _ := uuid.Parse(userIDStr)
+
+	refreshToken := ctx.Cookies("refresh_token")
+
+	if apiErr := h.uc.DeleteAccount(ctx.Context(), userID, refreshToken); apiErr != nil {
+		return response.Error(ctx, apiErr, nil)
+	}
+
+	ctx.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HTTPOnly: true,
+		Secure:   true,
+		SameSite: fiber.CookieSameSiteNoneMode,
+	})
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }

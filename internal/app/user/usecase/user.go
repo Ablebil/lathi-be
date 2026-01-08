@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"math"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
+	"github.com/Ablebil/lathi-be/internal/infra/redis"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/google/uuid"
 )
@@ -19,16 +21,18 @@ type userUsecase struct {
 	dictRepo  contract.DictionaryRepositoryItf
 	lbRepo    contract.LeaderboardRepositoryItf
 	storage   minio.MinioItf
+	cache     redis.RedisItf
 	env       *config.Env
 }
 
-func NewUserUsecase(userRepo contract.UserRepositoryItf, storyRepo contract.StoryRepositoryItf, dictRepo contract.DictionaryRepositoryItf, lbRepo contract.LeaderboardRepositoryItf, storage minio.MinioItf, env *config.Env) contract.UserUsecaseItf {
+func NewUserUsecase(userRepo contract.UserRepositoryItf, storyRepo contract.StoryRepositoryItf, dictRepo contract.DictionaryRepositoryItf, lbRepo contract.LeaderboardRepositoryItf, storage minio.MinioItf, cache redis.RedisItf, env *config.Env) contract.UserUsecaseItf {
 	return &userUsecase{
 		userRepo:  userRepo,
 		storyRepo: storyRepo,
 		dictRepo:  dictRepo,
 		lbRepo:    lbRepo,
 		storage:   storage,
+		cache:     cache,
 		env:       env,
 	}
 }
@@ -126,4 +130,33 @@ func (uc *userUsecase) EditUserProfile(ctx context.Context, userID uuid.UUID, re
 	}
 
 	return uc.GetUserProfile(ctx, userID)
+}
+
+func (uc *userUsecase) DeleteAccount(ctx context.Context, userID uuid.UUID, refreshToken string) *response.APIError {
+	user, err := uc.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		slog.Error("failed to get user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
+	}
+	if user == nil {
+		return response.ErrNotFound("Akun ga ditemukan, coba daftar dulu ya")
+	}
+
+	if err := uc.userRepo.DeleteUser(ctx, userID); err != nil {
+		slog.Error("failed to delete user", "error", err)
+		return response.ErrInternal("Coba lagi nanti ya!")
+	}
+
+	if refreshToken != "" {
+		cacheKey := fmt.Sprintf("refresh:%s", refreshToken)
+		if err := uc.cache.Del(ctx, cacheKey); err != nil {
+			slog.Warn("failed to delete refresh token", "error", err)
+		}
+	}
+
+	if err := uc.lbRepo.RemoveUserFromLeaderboard(ctx, userID); err != nil {
+		slog.Warn("failed to remove user from leaderboard", "error", err)
+	}
+
+	return nil
 }

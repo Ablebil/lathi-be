@@ -17,6 +17,7 @@ type LeaderboardRepositoryItf interface {
 	GetTopUsers(ctx context.Context, limit int) ([]LeaderboardEntry, error)
 	GetUserRank(ctx context.Context, userID uuid.UUID) (rank int, score int, err error)
 	RebuildLeaderboard(ctx context.Context) error
+	RemoveUserFromLeaderboard(ctx context.Context, userID uuid.UUID) error
 }
 
 type LeaderboardEntry struct {

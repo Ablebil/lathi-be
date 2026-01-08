@@ -28,8 +28,10 @@ type User struct {
 	CreatedAt            time.Time `json:"created_at" gorm:"type:timestamp;autoCreateTime;not null"`
 	UpdatedAt            time.Time `json:"updated_at" gorm:"type:timestamp;autoUpdateTime;not null"`
 
-	Badges     []Badge     `json:"badges" gorm:"many2many:user_badges"`
-	UserBadges []UserBadge `gorm:"foreignKey:UserID"`
+	Badges         []Badge            `json:"badges" gorm:"many2many:user_badges;constraint:OnDelete:CASCADE"`
+	UserBadges     []UserBadge        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	StorySession   []UserStorySession `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	UserVocabulary []UserVocabulary   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

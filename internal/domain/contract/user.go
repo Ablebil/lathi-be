@@ -13,6 +13,7 @@ import (
 type UserUsecaseItf interface {
 	GetUserProfile(ctx context.Context, userID uuid.UUID) (*dto.UserProfileResponse, *response.APIError)
 	EditUserProfile(ctx context.Context, userID uuid.UUID, req *dto.EditUserProfileRequest) (*dto.UserProfileResponse, *response.APIError)
+	DeleteAccount(ctx context.Context, userID uuid.UUID, refreshToken string) *response.APIError
 }
 
 type UserRepositoryItf interface {
@@ -28,4 +29,5 @@ type UserRepositoryItf interface {
 	UpdateUserTitle(ctx context.Context, userID uuid.UUID, title entity.Title) error
 	AssignBadge(ctx context.Context, userID uuid.UUID, badgeCode string) error
 	DeleteUnverifiedUsers(ctx context.Context, threshold time.Time) (int64, error)
+	DeleteUser(ctx context.Context, userID uuid.UUID) error
 }

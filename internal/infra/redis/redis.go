@@ -19,6 +19,7 @@ type RedisItf interface {
 	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) ([]r.Z, error)
 	ZRevRank(ctx context.Context, key string, member string) (int64, error)
 	ZScore(ctx context.Context, key string, member string) (float64, error)
+	ZRem(ctx context.Context, key string, member string) error
 	Close() error
 }
 
@@ -88,6 +89,10 @@ func (rd *redis) ZScore(ctx context.Context, key string, member string) (float64
 		return 0, nil
 	}
 	return score, err
+}
+
+func (rd *redis) ZRem(ctx context.Context, key string, member string) error {
+	return rd.client.ZRem(ctx, key, member).Err()
 }
 
 func (rd *redis) Close() error {

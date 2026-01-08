@@ -146,3 +146,7 @@ func (r *userRepository) DeleteUnverifiedUsers(ctx context.Context, threshold ti
 
 	return result.RowsAffected, nil
 }
+
+func (r *userRepository) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+	return r.db.WithContext(ctx).Delete(&entity.User{}, userID).Error
+}

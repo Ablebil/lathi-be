@@ -104,6 +104,11 @@ func (r *leaderboardRepository) RebuildLeaderboard(ctx context.Context) error {
 	return nil
 }
 
+func (r *leaderboardRepository) RemoveUserFromLeaderboard(ctx context.Context, userID uuid.UUID) error {
+	key := "leaderboard:global"
+	return r.cache.ZRem(ctx, key, userID.String())
+}
+
 func calculateScore(chaptersCompleted, vocabsCollected int) int {
 	return (chaptersCompleted * 100) + (vocabsCollected * 10)
 }

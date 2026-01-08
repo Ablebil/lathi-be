@@ -64,6 +64,9 @@ type UserStorySession struct {
 	HistoryLog     types.JSONB `json:"history_log" gorm:"type:jsonb;default:'[]'::jsonb;not null"`
 	CreatedAt      time.Time   `json:"created_at" gorm:"type:timestamp;autoCreateTime;not null"`
 	UpdatedAt      time.Time   `json:"updated_at" gorm:"type:timestamp;autoUpdateTime;not null"`
+
+	User    User    `gorm:"foreignKey:UserID;references:ID;constraint:OnDelete:CASCADE"`
+	Chapter Chapter `gorm:"foreignKey:ChapterID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 func (uss *UserStorySession) BeforeCreate(tx *gorm.DB) error {
