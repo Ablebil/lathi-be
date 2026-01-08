@@ -1334,6 +1334,49 @@ components:
               detail: "Coba lagi nanti ya!"
               status: 500
 
+    # /users/account errors
+    ErrDeleteAccountUnauthorized:
+      description: Unauthorized - User not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "unauthorized"
+              message: "Kamu belum login, yuk login dulu"
+              detail: "Kamu belum login, yuk login dulu"
+              status: 401
+
+    ErrDeleteAccountNotFound:
+      description: Not found - User account not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "not_found"
+              message: "Data ga ditemukan"
+              detail: "Akun ga ditemukan, coba daftar dulu ya"
+              status: 404
+
+    ErrDeleteAccountInternal:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            success: false
+            error:
+              type: "internal_error"
+              message: "Coba lagi nanti ya!"
+              detail: "Coba lagi nanti ya!"
+              status: 500
+
     # /leaderboards errors
     ErrLeaderboardInternal:
       description: Internal server error
@@ -2095,6 +2138,30 @@ paths:
           $ref: "#/components/responses/ErrEditProfileConflict"
         "500":
           $ref: "#/components/responses/ErrEditProfileInternal"
+
+  /users/account:
+    delete:
+      tags:
+        - User
+      summary: Delete User Account
+      description: Permanently delete authenticated user's account.
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: No Content - Account deleted successfully
+          headers:
+            Set-Cookie:
+              description: Refresh token cookie cleared
+              schema:
+                type: string
+                example: "refresh_token=; Path=/; Max-Age=-1; HttpOnly; Secure; SameSite=None"
+        "401":
+          $ref: "#/components/responses/ErrDeleteAccountUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrDeleteAccountNotFound"
+        "500":
+          $ref: "#/components/responses/ErrDeleteAccountInternal"
 
   # leaderboard endpoints
   /leaderboards:

@@ -53,7 +53,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			IsVerified:           true,
 			CurrentTitle:         entity.Priyayi,
 			LastChapterCompleted: 4,
-			TotalWordsCollected:  64,
+			TotalWordsCollected:  58,
 		},
 		{
 			ID:                   uuid.New(),
@@ -64,7 +64,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			IsVerified:           true,
 			CurrentTitle:         entity.Abdi,
 			LastChapterCompleted: 2,
-			TotalWordsCollected:  32,
+			TotalWordsCollected:  25,
 		},
 		{
 			ID:                   uuid.New(),
