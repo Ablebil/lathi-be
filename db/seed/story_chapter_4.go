@@ -31,8 +31,8 @@ func seedChapter4(db *gorm.DB, vocabMap map[string]uuid.UUID) error {
 		}
 	}
 
-	andi := func(exp string) charData { return charData{Name: "Andi", Img: "chars/andi_" + exp + ".webp"} }
-	sekar := func(exp string) charData { return charData{Name: "Sekar", Img: "chars/sekar_" + exp + ".webp"} }
+	andi := func(exp string) charData { return charData{Name: "Andi", Img: "chars/andi_batik_" + exp + ".webp"} }
+	sekar := func(exp string) charData { return charData{Name: "Sekar", Img: "chars/sekar_casual_" + exp + ".webp"} }
 	pakbroto := func(exp string) charData { return charData{Name: "Pak Broto", Img: "chars/pakbroto_" + exp + ".webp"} }
 
 	slidesData := []slideData{
