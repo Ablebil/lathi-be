@@ -50,16 +50,17 @@ func (r *leaderboardRepository) GetTopUsers(ctx context.Context, limit int) ([]c
 		}
 
 		var user entity.User
-		if err := r.db.WithContext(ctx).Select("username", "current_title").First(&user, userID).Error; err != nil {
+		if err := r.db.WithContext(ctx).Select("username", "avatar_url", "current_title").First(&user, userID).Error; err != nil {
 			continue
 		}
 
 		entries = append(entries, contract.LeaderboardEntry{
-			Rank:     i + 1,
-			UserID:   userID,
-			Username: user.Username,
-			Title:    string(user.CurrentTitle),
-			Score:    int(result.Score),
+			Rank:      i + 1,
+			UserID:    userID,
+			Username:  user.Username,
+			AvatarURL: user.AvatarURL,
+			Title:     string(user.CurrentTitle),
+			Score:     int(result.Score),
 		})
 	}
 

@@ -32,11 +32,12 @@ func (uc *leaderboardUsecase) GetLeaderboard(ctx context.Context) (*dto.Leaderbo
 	var topUsers []dto.LeaderboardItemResponse
 	for _, entry := range entries {
 		topUsers = append(topUsers, dto.LeaderboardItemResponse{
-			Rank:     entry.Rank,
-			UserID:   entry.UserID,
-			Username: entry.Username,
-			Title:    entry.Title,
-			Score:    entry.Score,
+			Rank:      entry.Rank,
+			UserID:    entry.UserID,
+			Username:  entry.Username,
+			AvatarURL: uc.storage.GetObjectURL(entry.AvatarURL),
+			Title:     entry.Title,
+			Score:     entry.Score,
 		})
 	}
 

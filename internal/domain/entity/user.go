@@ -10,9 +10,9 @@ import (
 type Title string
 
 const (
-	Cantrik Title = "cantrik"
-	Abdi    Title = "abdi"
-	Priyayi Title = "priyayi"
+	Cantrik Title = "Cantrik"
+	Abdi    Title = "Abdi"
+	Priyayi Title = "Priyayi"
 )
 
 type User struct {
@@ -21,7 +21,7 @@ type User struct {
 	Email                string    `json:"email" gorm:"type:varchar(255);unique;not null"`
 	Password             string    `json:"password" gorm:"type:varchar(255);not null"`
 	AvatarURL            string    `json:"avatar_url" gorm:"type:varchar(255);not null"`
-	CurrentTitle         Title     `json:"current_title" gorm:"type:varchar(255);default:'cantrik';not null"`
+	CurrentTitle         Title     `json:"current_title" gorm:"type:varchar(255);default:'Cantrik';not null"`
 	LastChapterCompleted int       `json:"last_chapter_completed" gorm:"type:int;default:0;not null"`
 	TotalWordsCollected  int       `json:"total_words_collected" gorm:"type:int;default:0;not null"`
 	IsVerified           bool      `json:"is_verified" gorm:"type:boolean;default:false;not null"`

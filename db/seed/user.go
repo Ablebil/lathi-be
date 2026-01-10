@@ -86,7 +86,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 			IsVerified:           true,
 			CurrentTitle:         entity.Cantrik,
 			LastChapterCompleted: 0,
-			TotalWordsCollected:  0,
+			TotalWordsCollected:  7,
 		},
 		{
 			ID:                   uuid.New(),
