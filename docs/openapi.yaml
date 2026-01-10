@@ -451,8 +451,8 @@ components:
           example: "https://storage.lathi.id/avatars/default.webp"
         current_title:
           type: string
-          enum: ["cantrik", "abdi", "priyayi"]
-          example: "cantrik"
+          enum: ["Cantrik", "Abdi", "Priyayi"]
+          example: "Cantrik"
         stats:
           $ref: "#/components/schemas/UserStatsResponse"
         badges:
@@ -488,10 +488,13 @@ components:
         username:
           type: string
           example: "valen"
+        avatar_url:
+          type: string
+          example: "https://storage.lathi.id/avatars/default.webp"
         title:
           type: string
-          enum: ["cantrik", "abdi", "priyayi"]
-          example: "priyayi"
+          enum: ["Cantrik", "Abdi", "Priyayi"]
+          example: "Priyayi"
         score:
           type: integer
           example: 1040
@@ -2052,7 +2055,7 @@ paths:
                   username: "andi"
                   email: "andi@lathi.id"
                   avatar_url: "https://storage.lathi.id/avatars/default.webp"
-                  current_title: "cantrik"
+                  current_title: "Cantrik"
                   stats:
                     total_chapters: 4
                     completed_chapters: 2
@@ -2113,7 +2116,7 @@ paths:
                   username: "andi123"
                   email: "andi@lathi.id"
                   avatar_url: "https://storage.lathi.id/avatars/default.webp"
-                  current_title: "cantrik"
+                  current_title: "Cantrik"
                   stats:
                     total_chapters: 4
                     completed_chapters: 2
@@ -2192,27 +2195,32 @@ paths:
                     - rank: 1
                       user_id: "550e8400-e29b-41d4-a716-446655440000"
                       username: "valen"
-                      title: "priyayi"
+                      avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                      title: "Priyayi"
                       score: 1040
                     - rank: 2
                       user_id: "550e8400-e29b-41d4-a716-446655440001"
                       username: "soma"
-                      title: "abdi"
+                      avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                      title: "Abdi"
                       score: 520
                     - rank: 3
                       user_id: "550e8400-e29b-41d4-a716-446655440002"
                       username: "sari"
-                      title: "cantrik"
+                      avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                      title: "Cantrik"
                       score: 220
                     - rank: 4
                       user_id: "550e8400-e29b-41d4-a716-446655440003"
                       username: "laras"
-                      title: "cantrik"
+                      avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                      title: "Cantrik"
                       score: 250
                     - rank: 5
                       user_id: "550e8400-e29b-41d4-a716-446655440004"
                       username: "budi"
-                      title: "cantrik"
-                      score: 0
+                      avatar_url: "https://storage.lathi.id/avatars/default.webp"
+                      title: "Cantrik"
+                      score: 100
         "500":
           $ref: "#/components/responses/ErrLeaderboardInternal"
