@@ -70,7 +70,7 @@ func (c *cronJob) deleteUnverifiedUsersJob() {
 
 func (c *cronJob) rebuildLeaderboardJob() {
 	// run every 6 hours
-	_, err := c.cron.AddFunc("0 */6 * * *", func() {
+	_, err := c.cron.AddFunc("0 */3 * * *", func() {
 		ctx := context.Background()
 
 		if err := c.lbRepo.RebuildLeaderboard(ctx); err != nil {

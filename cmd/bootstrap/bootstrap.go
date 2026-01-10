@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,7 @@ import (
 	"github.com/Ablebil/lathi-be/db/migration"
 	"github.com/Ablebil/lathi-be/db/seed"
 	"github.com/Ablebil/lathi-be/internal/config"
+	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	cronJob "github.com/Ablebil/lathi-be/internal/infra/cron"
 	"github.com/Ablebil/lathi-be/internal/infra/fiber"
 	"github.com/Ablebil/lathi-be/internal/infra/minio"
@@ -79,6 +81,8 @@ func Start() error {
 	leaderboardUsecase := lbUc.NewLeaderboardUsecase(leaderboardRepository, storage)
 	lbHdl.NewLeaderboardHandler(v1, leaderboardUsecase)
 
+	handleLeaderboardRebuild(leaderboardRepository)
+
 	// story module
 	storyRepository := storyRepo.NewStoryRepository(db)
 	storyUsecase := storyUc.NewStoryUsecase(storyRepository, userRepository, leaderboardRepository, storage, env)
@@ -97,6 +101,19 @@ func Start() error {
 	cron.Start()
 
 	return app.Listen(fmt.Sprintf("%s:%d", env.AppHost, env.AppPort))
+}
+
+func handleLeaderboardRebuild(lbRepo contract.LeaderboardRepositoryItf) {
+	go func() {
+		ctx := context.Background()
+		slog.Info("rebuilding leaderboard from database...")
+
+		if err := lbRepo.RebuildLeaderboard(ctx); err != nil {
+			slog.Error("failed to rebuild leaderboard on startup", "error", err)
+		} else {
+			slog.Info("leaderboard rebuilt successfully on startup")
+		}
+	}()
 }
 
 func handleArgs(env *config.Env) {
