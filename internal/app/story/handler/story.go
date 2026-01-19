@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/middleware"
@@ -22,11 +24,11 @@ func NewStoryHandler(router fiber.Router, validator validator.ValidatorItf, mw m
 	}
 
 	storyRouter := router.Group("/stories", mw.Authenticate)
-	storyRouter.Get("/chapters", handler.getChapterList)
-	storyRouter.Get("/chapters/:id/content", handler.getChapterContent)
-	storyRouter.Get("/chapters/:id/session", handler.getUserSession)
-	storyRouter.Post("/chapters/:id/start", handler.startSession)
-	storyRouter.Post("/action", handler.submitAction)
+	storyRouter.Get("/chapters", mw.RateLimit(30, 1*time.Minute, "story_chapters"), handler.getChapterList)
+	storyRouter.Get("/chapters/:id/content", mw.RateLimit(20, 1*time.Minute, "story_content"), handler.getChapterContent)
+	storyRouter.Get("/chapters/:id/session", mw.RateLimit(20, 1*time.Minute, "story_session"), handler.getUserSession)
+	storyRouter.Post("/chapters/:id/start", mw.RateLimit(10, 1*time.Minute, "story_start"), handler.startSession)
+	storyRouter.Post("/action", mw.RateLimit(60, 1*time.Minute, "story_action"), handler.submitAction)
 }
 
 func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {

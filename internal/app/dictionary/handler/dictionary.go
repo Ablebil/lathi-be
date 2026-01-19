@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/middleware"
@@ -22,7 +24,7 @@ func NewDictionaryHandler(router fiber.Router, validator validator.ValidatorItf,
 	}
 
 	dictionaryRouter := router.Group("/dictionaries", mw.Authenticate)
-	dictionaryRouter.Get("/", handler.getDictionaryList)
+	dictionaryRouter.Get("/", mw.RateLimit(60, 1*time.Minute, "dict_list"), handler.getDictionaryList)
 }
 
 func (h *dictionaryHandler) getDictionaryList(ctx *fiber.Ctx) error {

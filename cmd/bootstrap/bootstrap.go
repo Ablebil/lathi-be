@@ -69,17 +69,17 @@ func Start() error {
 	bcrypt := bcrypt.NewBcrypt()
 	mail := mail.NewMail(env)
 	jwt := jwt.NewJWT(env)
-	mw := middleware.NewMiddleware(jwt)
+	mw := middleware.NewMiddleware(jwt, cache, env)
 
 	// auth module
 	userRepository := userRepo.NewUserRepository(db)
 	authUsecase := authUc.NewAuthUsecase(userRepository, bcrypt, mail, cache, jwt, env)
-	authHdl.NewAuthHandler(v1, val, env, authUsecase)
+	authHdl.NewAuthHandler(v1, val, env, mw, authUsecase)
 
 	// leaderboard module
 	leaderboardRepository := lbRepo.NewLeaderboardRepository(db, cache)
 	leaderboardUsecase := lbUc.NewLeaderboardUsecase(leaderboardRepository, storage)
-	lbHdl.NewLeaderboardHandler(v1, leaderboardUsecase)
+	lbHdl.NewLeaderboardHandler(v1, mw, leaderboardUsecase)
 
 	handleLeaderboardRebuild(leaderboardRepository)
 
@@ -95,7 +95,7 @@ func Start() error {
 
 	// user module
 	userUsecase := userUc.NewUserUsecase(userRepository, storyRepository, dictionaryRepository, leaderboardRepository, storage, cache, env)
-	userHdl.NewUserHandler(v1, val, mw, userUsecase)
+	userHdl.NewUserHandler(v1, val, env, mw, userUsecase)
 
 	cron := cronJob.NewCronJob(userRepository, leaderboardRepository)
 	cron.Start()

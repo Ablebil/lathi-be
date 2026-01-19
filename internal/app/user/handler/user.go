@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"time"
+
+	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
 	"github.com/Ablebil/lathi-be/internal/middleware"
@@ -12,19 +15,21 @@ import (
 
 type userHandler struct {
 	val validator.ValidatorItf
+	env *config.Env
 	uc  contract.UserUsecaseItf
 }
 
-func NewUserHandler(router fiber.Router, validator validator.ValidatorItf, mw middleware.MiddlewareItf, userUc contract.UserUsecaseItf) {
+func NewUserHandler(router fiber.Router, validator validator.ValidatorItf, env *config.Env, mw middleware.MiddlewareItf, userUc contract.UserUsecaseItf) {
 	handler := &userHandler{
 		val: validator,
+		env: env,
 		uc:  userUc,
 	}
 
 	userRouter := router.Group("/users", mw.Authenticate)
-	userRouter.Get("/profile", handler.getProfile)
-	userRouter.Patch("/profile", handler.editProfile)
-	userRouter.Delete("/account", handler.deleteAccount)
+	userRouter.Get("/profile", mw.RateLimit(30, 1*time.Minute, "user_profile"), handler.getProfile)
+	userRouter.Patch("/profile", mw.RateLimit(10, 1*time.Hour, "user_edit"), handler.editProfile)
+	userRouter.Delete("/account", mw.RateLimit(2, 1*time.Hour, "user_delete"), handler.deleteAccount)
 }
 
 func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
@@ -86,7 +91,12 @@ func (h *userHandler) deleteAccount(ctx *fiber.Ctx) error {
 		MaxAge:   -1,
 		HTTPOnly: true,
 		Secure:   true,
-		SameSite: fiber.CookieSameSiteNoneMode,
+		SameSite: func() string {
+			if h.env.AppEnv == "production" {
+				return fiber.CookieSameSiteLaxMode
+			}
+			return fiber.CookieSameSiteNoneMode
+		}(),
 	})
 
 	return ctx.SendStatus(fiber.StatusNoContent)

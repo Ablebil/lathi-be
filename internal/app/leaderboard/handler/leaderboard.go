@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
+	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/gofiber/fiber/v2"
 )
@@ -10,13 +13,13 @@ type leaderboardHandler struct {
 	uc contract.LeaderboardUsecaseItf
 }
 
-func NewLeaderboardHandler(router fiber.Router, lbUc contract.LeaderboardUsecaseItf) {
+func NewLeaderboardHandler(router fiber.Router, mw middleware.MiddlewareItf, lbUc contract.LeaderboardUsecaseItf) {
 	handler := &leaderboardHandler{
 		uc: lbUc,
 	}
 
 	leaderboardRouter := router.Group("/leaderboards")
-	leaderboardRouter.Get("/", handler.getLeaderboard)
+	leaderboardRouter.Get("/", mw.RateLimit(30, 1*time.Minute, "leaderboard"), handler.getLeaderboard)
 }
 
 func (h *leaderboardHandler) getLeaderboard(ctx *fiber.Ctx) error {

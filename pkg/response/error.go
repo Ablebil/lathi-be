@@ -61,3 +61,6 @@ func ErrBadRequest(detail string) *APIError {
 func ErrConflict(detail string) *APIError {
 	return NewAPIError(409, "conflict", "Data udah ada sebelumnya", detail)
 }
+func ErrTooManyRequests(detail string) *APIError {
+	return NewAPIError(429, "too_many_requests", "Terlalu banyak permintaan, coba lagi nanti ya", detail)
+}

@@ -20,6 +20,7 @@ type RedisItf interface {
 	ZRevRank(ctx context.Context, key string, member string) (int64, error)
 	ZScore(ctx context.Context, key string, member string) (float64, error)
 	ZRem(ctx context.Context, key string, member string) error
+	Incr(ctx context.Context, key string, ttl time.Duration) (int64, error)
 	Close() error
 }
 
@@ -93,6 +94,22 @@ func (rd *redis) ZScore(ctx context.Context, key string, member string) (float64
 
 func (rd *redis) ZRem(ctx context.Context, key string, member string) error {
 	return rd.client.ZRem(ctx, key, member).Err()
+}
+
+func (rd *redis) Incr(ctx context.Context, key string, ttl time.Duration) (int64, error) {
+	val, err := rd.client.Incr(ctx, key).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	if val == 1 {
+		_, err := rd.client.Expire(ctx, key, ttl).Result()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return val, nil
 }
 
 func (rd *redis) Close() error {

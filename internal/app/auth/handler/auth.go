@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/domain/dto"
+	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +18,7 @@ type authHandler struct {
 	uc  contract.AuthUsecaseItf
 }
 
-func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, env *config.Env, authUc contract.AuthUsecaseItf) {
+func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, env *config.Env, mw middleware.MiddlewareItf, authUc contract.AuthUsecaseItf) {
 	handler := authHandler{
 		val: validator,
 		env: env,
@@ -23,11 +26,11 @@ func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, env *
 	}
 
 	authRouter := router.Group("/auth")
-	authRouter.Post("/register", handler.register)
-	authRouter.Post("/verify", handler.verify)
-	authRouter.Post("/login", handler.login)
+	authRouter.Post("/register", mw.RateLimit(5, 15*time.Minute, "register"), handler.register)
+	authRouter.Post("/verify", mw.RateLimit(10, 15*time.Minute, "verify"), handler.verify)
+	authRouter.Post("/login", mw.RateLimit(5, 15*time.Minute, "login"), handler.login)
 	authRouter.Post("/refresh", handler.refresh)
-	authRouter.Post("/logout", handler.logout)
+	authRouter.Post("/logout", mw.RateLimit(5, 1*time.Hour, "logout"), handler.logout)
 }
 
 func (h *authHandler) register(ctx *fiber.Ctx) error {
