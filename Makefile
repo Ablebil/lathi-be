@@ -10,5 +10,11 @@ logs:
 restart:
 	@docker compose down
 	@docker compose up
-down-remove-volumes:
+down:
 	@docker compose down -v
+migrate-down:
+	@docker compose exec app /app/server migrate -action down
+migrate-up:
+	@docker compose exec app /app/server migrate -action up
+seed-all:
+	@docker compose exec app /app/server seed
