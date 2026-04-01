@@ -6,7 +6,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/domain/contract"
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type leaderboardHandler struct {
@@ -22,11 +22,13 @@ func NewLeaderboardHandler(router fiber.Router, mw middleware.MiddlewareItf, lbU
 	leaderboardRouter.Get("/", mw.RateLimit(30, 1*time.Minute, "leaderboard"), handler.getLeaderboard)
 }
 
-func (h *leaderboardHandler) getLeaderboard(ctx *fiber.Ctx) error {
-	resp, apiErr := h.uc.GetLeaderboard(ctx.Context())
+func (h *leaderboardHandler) getLeaderboard(ctx fiber.Ctx) error {
+	resp, apiErr := h.uc.GetLeaderboard(ctx.RequestCtx())
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Leaderboard berhasil dimuat", resp)
 }
+
+// fiber:context-methods migrated

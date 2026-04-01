@@ -8,7 +8,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
@@ -31,14 +31,14 @@ func NewStoryHandler(router fiber.Router, validator validator.ValidatorItf, mw m
 	storyRouter.Post("/action", mw.RateLimit(60, 1*time.Minute, "story_action"), handler.submitAction)
 }
 
-func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {
+func (h *storyHandler) getChapterList(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
-	resp, apiErr := h.uc.GetChapterList(ctx.Context(), userID)
+	resp, apiErr := h.uc.GetChapterList(ctx.RequestCtx(), userID)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -46,7 +46,7 @@ func (h *storyHandler) getChapterList(ctx *fiber.Ctx) error {
 	return response.Success(ctx, fiber.StatusOK, "Daftar chapter berhasil dimuat", resp)
 }
 
-func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
+func (h *storyHandler) getChapterContent(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -59,7 +59,7 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
-	resp, apiErr := h.uc.GetChapterContent(ctx.Context(), userID, chapterID)
+	resp, apiErr := h.uc.GetChapterContent(ctx.RequestCtx(), userID, chapterID)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -67,7 +67,7 @@ func (h *storyHandler) getChapterContent(ctx *fiber.Ctx) error {
 	return response.Success(ctx, fiber.StatusOK, "Konten chapter berhasil dimuat", resp)
 }
 
-func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
+func (h *storyHandler) getUserSession(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -80,7 +80,7 @@ func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
-	resp, apiErr := h.uc.GetUserSession(ctx.Context(), userID, chapterID)
+	resp, apiErr := h.uc.GetUserSession(ctx.RequestCtx(), userID, chapterID)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -88,7 +88,7 @@ func (h *storyHandler) getUserSession(ctx *fiber.Ctx) error {
 	return response.Success(ctx, fiber.StatusOK, "Progressmu berhasil dipulihkan", resp)
 }
 
-func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
+func (h *storyHandler) startSession(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -101,14 +101,14 @@ func (h *storyHandler) startSession(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewParamValidationError("id", "uuid"), err)
 	}
 
-	if apiErr := h.uc.StartSession(ctx.Context(), userID, chapterID); apiErr != nil {
+	if apiErr := h.uc.StartSession(ctx.RequestCtx(), userID, chapterID); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Permainan dimulai, semangat ya!", nil)
 }
 
-func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
+func (h *storyHandler) submitAction(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -116,7 +116,7 @@ func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
 	userID, _ := uuid.Parse(userIDStr)
 
 	req := new(dto.StoryActionRequest)
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
@@ -124,10 +124,12 @@ func (h *storyHandler) submitAction(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	resp, apiErr := h.uc.SubmitAction(ctx.Context(), userID, req)
+	resp, apiErr := h.uc.SubmitAction(ctx.RequestCtx(), userID, req)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Aksimu berhasil diproses!", resp)
 }
+
+// fiber:context-methods migrated

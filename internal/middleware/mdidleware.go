@@ -6,7 +6,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/internal/infra/redis"
 	"github.com/Ablebil/lathi-be/pkg/jwt"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type middleware struct {
@@ -16,7 +16,7 @@ type middleware struct {
 }
 
 type MiddlewareItf interface {
-	Authenticate(ctx *fiber.Ctx) error
+	Authenticate(ctx fiber.Ctx) error
 	RateLimit(limit int, window time.Duration, keyPrefix string) fiber.Handler
 }
 

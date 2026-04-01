@@ -8,7 +8,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
@@ -27,7 +27,7 @@ func NewDictionaryHandler(router fiber.Router, validator validator.ValidatorItf,
 	dictionaryRouter.Get("/", mw.RateLimit(60, 1*time.Minute, "dict_list"), handler.getDictionaryList)
 }
 
-func (h *dictionaryHandler) getDictionaryList(ctx *fiber.Ctx) error {
+func (h *dictionaryHandler) getDictionaryList(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -52,14 +52,16 @@ func (h *dictionaryHandler) getDictionaryList(ctx *fiber.Ctx) error {
 	}
 
 	req := new(dto.DictionaryListRequest)
-	if err := ctx.QueryParser(req); err != nil {
+	if err := ctx.Bind().Query(req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Format query ga valid"), err)
 	}
 
-	resp, apiErr := h.uc.GetDictionaryList(ctx.Context(), userID, req)
+	resp, apiErr := h.uc.GetDictionaryList(ctx.RequestCtx(), userID, req)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Kamus berhasil dimuat", resp)
 }
+
+// fiber:context-methods migrated

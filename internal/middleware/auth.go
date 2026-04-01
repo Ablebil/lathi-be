@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/Ablebil/lathi-be/pkg/response"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func (m *middleware) Authenticate(ctx *fiber.Ctx) error {
+func (m *middleware) Authenticate(ctx fiber.Ctx) error {
 	header := ctx.Get("Authorization")
 	if header == "" {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)

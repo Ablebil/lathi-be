@@ -9,7 +9,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
@@ -32,14 +32,14 @@ func NewUserHandler(router fiber.Router, validator validator.ValidatorItf, env *
 	userRouter.Delete("/account", mw.RateLimit(2, 1*time.Hour, "user_delete"), handler.deleteAccount)
 }
 
-func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
+func (h *userHandler) getProfile(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
 	}
 	userID, _ := uuid.Parse(userIDStr)
 
-	resp, apiErr := h.uc.GetUserProfile(ctx.Context(), userID)
+	resp, apiErr := h.uc.GetUserProfile(ctx.RequestCtx(), userID)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -47,7 +47,7 @@ func (h *userHandler) getProfile(ctx *fiber.Ctx) error {
 	return response.Success(ctx, fiber.StatusOK, "Profilmu berhasil dimuat", resp)
 }
 
-func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
+func (h *userHandler) editProfile(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -55,7 +55,7 @@ func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
 	userID, _ := uuid.Parse(userIDStr)
 
 	req := new(dto.EditUserProfileRequest)
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
@@ -63,7 +63,7 @@ func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	resp, apiErr := h.uc.EditUserProfile(ctx.Context(), userID, req)
+	resp, apiErr := h.uc.EditUserProfile(ctx.RequestCtx(), userID, req)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -71,7 +71,7 @@ func (h *userHandler) editProfile(ctx *fiber.Ctx) error {
 	return response.Success(ctx, fiber.StatusOK, "Profilmu berhasil diperbarui", resp)
 }
 
-func (h *userHandler) deleteAccount(ctx *fiber.Ctx) error {
+func (h *userHandler) deleteAccount(ctx fiber.Ctx) error {
 	userIDStr, ok := ctx.Locals("user_id").(string)
 	if !ok {
 		return response.Error(ctx, response.ErrUnauthorized("Kamu belum login, yuk login dulu"), nil)
@@ -80,7 +80,7 @@ func (h *userHandler) deleteAccount(ctx *fiber.Ctx) error {
 
 	refreshToken := ctx.Cookies("refresh_token")
 
-	if apiErr := h.uc.DeleteAccount(ctx.Context(), userID, refreshToken); apiErr != nil {
+	if apiErr := h.uc.DeleteAccount(ctx.RequestCtx(), userID, refreshToken); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
@@ -101,3 +101,5 @@ func (h *userHandler) deleteAccount(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+// fiber:context-methods migrated

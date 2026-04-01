@@ -9,7 +9,7 @@ import (
 	"github.com/Ablebil/lathi-be/internal/middleware"
 	"github.com/Ablebil/lathi-be/pkg/response"
 	"github.com/Ablebil/lathi-be/pkg/validator"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type authHandler struct {
@@ -33,9 +33,9 @@ func NewAuthHandler(router fiber.Router, validator validator.ValidatorItf, env *
 	authRouter.Post("/logout", mw.RateLimit(5, 1*time.Hour, "logout"), handler.logout)
 }
 
-func (h *authHandler) register(ctx *fiber.Ctx) error {
+func (h *authHandler) register(ctx fiber.Ctx) error {
 	req := new(dto.RegisterRequest)
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
@@ -43,16 +43,16 @@ func (h *authHandler) register(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if apiErr := h.uc.Register(ctx.Context(), req); apiErr != nil {
+	if apiErr := h.uc.Register(ctx.RequestCtx(), req); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusCreated, "Pendaftaran berhasil, cek email kamu buat verifikasi, ya", nil)
 }
 
-func (h *authHandler) verify(ctx *fiber.Ctx) error {
+func (h *authHandler) verify(ctx fiber.Ctx) error {
 	req := new(dto.VerifyRequest)
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
@@ -60,16 +60,16 @@ func (h *authHandler) verify(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	if apiErr := h.uc.Verify(ctx.Context(), req); apiErr != nil {
+	if apiErr := h.uc.Verify(ctx.RequestCtx(), req); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
 	return response.Success(ctx, fiber.StatusOK, "Email kamu udah diverifikasi, yuk login sekarang!", nil)
 }
 
-func (h *authHandler) login(ctx *fiber.Ctx) error {
+func (h *authHandler) login(ctx fiber.Ctx) error {
 	req := new(dto.LoginRequest)
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		return response.Error(ctx, response.ErrBadRequest("Data yang kamu kirim belum pas, coba cek lagi ya"), err)
 	}
 
@@ -77,7 +77,7 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 		return response.Error(ctx, response.NewValidationError(err), err)
 	}
 
-	resp, apiErr := h.uc.Login(ctx.Context(), req)
+	resp, apiErr := h.uc.Login(ctx.RequestCtx(), req)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -102,13 +102,13 @@ func (h *authHandler) login(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *authHandler) refresh(ctx *fiber.Ctx) error {
+func (h *authHandler) refresh(ctx fiber.Ctx) error {
 	refreshToken := ctx.Cookies("refresh_token")
 	if refreshToken == "" {
 		return response.Error(ctx, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya"), nil)
 	}
 
-	resp, apiErr := h.uc.Refresh(ctx.Context(), refreshToken)
+	resp, apiErr := h.uc.Refresh(ctx.RequestCtx(), refreshToken)
 	if apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
@@ -133,13 +133,13 @@ func (h *authHandler) refresh(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *authHandler) logout(ctx *fiber.Ctx) error {
+func (h *authHandler) logout(ctx fiber.Ctx) error {
 	refreshToken := ctx.Cookies("refresh_token")
 	if refreshToken == "" {
 		return response.Error(ctx, response.ErrUnauthorized("Sesi kamu udah habis, coba login lagi ya"), nil)
 	}
 
-	if apiErr := h.uc.Logout(ctx.Context(), refreshToken); apiErr != nil {
+	if apiErr := h.uc.Logout(ctx.RequestCtx(), refreshToken); apiErr != nil {
 		return response.Error(ctx, apiErr, nil)
 	}
 
@@ -160,3 +160,5 @@ func (h *authHandler) logout(ctx *fiber.Ctx) error {
 
 	return response.Success(ctx, fiber.StatusOK, "Logout berhasil, sampai jumpa lagi!", nil)
 }
+
+// fiber:context-methods migrated

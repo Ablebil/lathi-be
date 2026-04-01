@@ -7,19 +7,19 @@ import (
 
 	"github.com/Ablebil/lathi-be/internal/config"
 	"github.com/Ablebil/lathi-be/pkg/response"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
 func (m *middleware) RateLimit(limit int, window time.Duration, keyPrefix string) fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
+	return func(ctx fiber.Ctx) error {
 		identifier := getRateLimitIdentifier(ctx)
 		if identifier == "" {
 			identifier = ensureAnonID(ctx, m.env)
 		}
 
 		key := fmt.Sprintf("rl:%s:%s", keyPrefix, identifier)
-		count, err := m.cache.Incr(ctx.Context(), key, window)
+		count, err := m.cache.Incr(ctx.RequestCtx(), key, window)
 		if err != nil {
 			return response.Error(ctx, response.ErrInternal("Coba lagi nanti ya!"), err)
 		}
@@ -43,7 +43,7 @@ func (m *middleware) RateLimit(limit int, window time.Duration, keyPrefix string
 	}
 }
 
-func getRateLimitIdentifier(ctx *fiber.Ctx) string {
+func getRateLimitIdentifier(ctx fiber.Ctx) string {
 	if userID, ok := ctx.Locals("user_id").(string); ok && userID != "" {
 		return userID
 	}
@@ -63,7 +63,7 @@ func getRateLimitIdentifier(ctx *fiber.Ctx) string {
 	return fmt.Sprintf("%s|%s|%s", ua, lang, encoding)
 }
 
-func ensureAnonID(ctx *fiber.Ctx, env *config.Env) string {
+func ensureAnonID(ctx fiber.Ctx, env *config.Env) string {
 	anonID := ctx.Cookies("anon_id")
 	if anonID == "" {
 		anonID = uuid.NewString()
@@ -91,3 +91,5 @@ func max(a, b int64) int64 {
 	}
 	return b
 }
+
+// fiber:context-methods migrated

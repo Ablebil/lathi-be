@@ -3,10 +3,10 @@ package response
 import (
 	"log/slog"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func Success(ctx *fiber.Ctx, status int, message string, data any) error {
+func Success(ctx fiber.Ctx, status int, message string, data any) error {
 	return ctx.Status(status).JSON(fiber.Map{
 		"success": true,
 		"message": message,
@@ -14,7 +14,7 @@ func Success(ctx *fiber.Ctx, status int, message string, data any) error {
 	})
 }
 
-func Error(ctx *fiber.Ctx, apiErr *APIError, err error) error {
+func Error(ctx fiber.Ctx, apiErr *APIError, err error) error {
 	slog.Error("API error",
 		"status", apiErr.Status,
 		"type", apiErr.Type,
